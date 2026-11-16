@@ -1,0 +1,2050 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Line Check</title>
+<meta name="description" content="Final inspection of pre-insulated phenolic duct: scan a label, tick each criterion, download the taglist checklist and the hourly defect checklist.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#15212B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>:root{color-scheme:light dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: one working column, sticky header. Scan a label, tap pass or fail on large buttons, hourly board shows defects per hour of the shift. */
+:root{
+  --bg:#EDF0F2; --surface:#FFFFFF; --ink:#15212B; --muted:#5B6B78; --line:#D3DAE0;
+  --accent:#1D5BBF; --accent-ink:#FFFFFF;
+  --pass:#17794B; --pass-bg:#DDF2E7; --fail:#B42318; --fail-bg:#FCE4E1; --warn:#94600A; --warn-bg:#FBEBC8;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-data:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1820; --surface:#17232D; --ink:#E6EDF2; --muted:#93A4B1; --line:#2A3946;
+    --accent:#6FA3F2; --accent-ink:#0B1722;
+    --pass:#55C98C; --pass-bg:#123525; --fail:#FF8A7D; --fail-bg:#3E1A17; --warn:#F0B95A; --warn-bg:#3A2B0B;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1820; --surface:#17232D; --ink:#E6EDF2; --muted:#93A4B1; --line:#2A3946;
+  --accent:#6FA3F2; --accent-ink:#0B1722;
+  --pass:#55C98C; --pass-bg:#123525; --fail:#FF8A7D; --fail-bg:#3E1A17; --warn:#F0B95A; --warn-bg:#3A2B0B;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.wrap{max-width:880px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);margin:0;letter-spacing:.01em;text-wrap:balance}
+h2{font-size:1.75rem;font-weight:700;margin:20px 0 12px}
+h3{font-size:1.1rem;font-weight:600}
+p{margin:0}
+.mono{font-family:var(--f-data);font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-block:10px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font-size:1.4rem;font-weight:700}
+.mark{width:22px;height:22px;border:3px solid var(--ink);border-radius:50%;position:relative;display:inline-block}
+.mark::after{content:"";position:absolute;left:3px;top:3px;width:10px;height:5px;border-left:3px solid var(--pass);border-bottom:3px solid var(--pass);transform:rotate(-45deg)}
+.store{font:600 .72rem var(--f-body);padding:3px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.store.on{color:var(--pass);border-color:var(--pass)}
+.store.bad{color:var(--fail);border-color:var(--fail)}
+.tabs{display:flex;gap:6px}
+.tab{font:500 .95rem var(--f-body);min-height:44px;padding:0 14px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.tab[aria-current="page"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+main{padding-block:4px 120px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px}
+.card[data-state="fail"]{border-color:var(--fail)}
+.card[data-state="pass"]{border-color:var(--pass)}
+.stack{display:grid;gap:12px}
+.sub{margin:24px 0 10px;color:var(--muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;font-family:var(--f-body);font-weight:600}
+.eyebrow{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.hint{font-size:.82rem;color:var(--muted)}
+.form{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.field{display:grid;gap:6px;min-width:0;align-content:start}
+label,.dlabel{font-size:.85rem;font-weight:600;color:var(--muted)}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:0 12px;min-height:48px;width:100%;min-width:0}
+textarea{padding:10px 12px;resize:vertical}
+.scanrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+#f-code{font:500 1.3rem var(--f-data);min-height:56px}
+.btn{font:600 1rem var(--f-body);min-height:52px;padding:0 20px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.ghost{min-height:44px;font-weight:500}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.err{color:var(--fail);font-weight:500}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.stageseg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stageseg .opt{min-height:56px;font-size:.95rem;line-height:1.2;padding:0 6px}
+
+.pill{font:600 .78rem var(--f-body);padding:4px 10px;border-radius:99px;white-space:nowrap;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.pill.pass{background:var(--pass-bg);color:var(--pass);border-color:var(--pass)}
+.pill.fail{background:var(--fail-bg);color:var(--fail);border-color:var(--fail)}
+.pill.na{color:var(--muted)}
+.seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+.seg.tri{grid-template-columns:repeat(3,minmax(0,1fr))}
+.opt{font:600 1.05rem var(--f-body);min-height:56px;border-radius:6px;border:2px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.opt[aria-pressed="true"]{border-color:var(--ink)}
+.opt.pass[aria-pressed="true"]{background:var(--pass-bg);border-color:var(--pass);color:var(--pass)}
+.opt.fail[aria-pressed="true"]{background:var(--fail-bg);border-color:var(--fail);color:var(--fail)}
+.opt.na[aria-pressed="true"]{background:var(--surface);border-color:var(--muted);color:var(--muted)}
+.opt.stg[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.chead h3{min-width:0}
+.detail{margin-top:12px;display:grid;gap:6px}
+
+.runhead .meta{color:var(--muted);font-size:.9rem;margin-top:4px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.prog{height:8px;background:var(--line);border-radius:4px;margin-top:12px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+
+.submitbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
+  padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.submitbar .wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}
+.submitbar .msg{flex:1 1 200px;min-width:0;font-size:.92rem}
+.verdictcard{display:grid;gap:8px}
+.verdict{font-size:2.6rem;margin:0;font-family:var(--f-display);font-weight:700}
+.verdictcard.pass .verdict{color:var(--pass)}
+.verdictcard.fail .verdict{color:var(--fail)}
+.fitem{padding-top:8px;border-top:1px dashed var(--line)}
+.banner{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn);border-radius:6px;padding:10px 14px;margin:12px 0;font-size:.92rem}
+
+.list{padding:4px 16px}
+.prow{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;align-items:center}
+.prow:last-child{border-bottom:0}
+.filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+.stat .n{font:600 2rem var(--f-display);font-variant-numeric:tabular-nums}
+.stat .t{font-size:.82rem;color:var(--muted)}
+.hours{padding:4px 16px;margin-top:12px}
+.hrow{display:grid;grid-template-columns:6.6rem minmax(0,1fr) 2.4rem;gap:4px 12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.hrow:last-child{border-bottom:0}
+.hlabel{font:500 .9rem var(--f-data);font-variant-numeric:tabular-nums}
+.hbar{display:flex;height:16px;background:var(--bg);border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.hbar i{display:block;height:100%;background:var(--fail)}
+.hnum{font:700 1.3rem var(--f-display);text-align:right;font-variant-numeric:tabular-nums}
+.hrow.zero .hnum{color:var(--muted);font-weight:500}
+.hrow.future{opacity:.5}
+.hmeta{grid-column:1/-1;font-size:.85rem;color:var(--muted)}
+details.rec{background:var(--surface);border:1px solid var(--line);border-radius:8px}
+details.rec>summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;min-height:56px}
+details.rec>summary::-webkit-details-marker{display:none}
+details.rec>summary .grow{flex:1 1 180px;min-width:0}
+details.rec .body{padding:0 16px 14px;display:grid;gap:8px}
+.when{color:var(--muted);font-size:.85rem}
+.csv{width:100%;min-height:110px;font:400 .8rem var(--f-data);margin-top:10px}
+.check{display:flex;align-items:center;gap:10px;min-height:44px;font-size:.95rem;font-weight:500;color:var(--ink)}
+.check input{width:22px;min-height:22px;height:22px}
+
+.stats4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+table{border-collapse:collapse;width:100%;min-width:420px;font-size:.85rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+thead th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.maps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.pcbox{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.camwrap{position:relative;margin-top:10px;display:grid;gap:10px}
+#camv{width:100%;max-height:300px;background:#000;border-radius:8px;object-fit:cover}
+.camline{position:absolute;left:8%;right:8%;top:50%;height:2px;background:var(--fail);opacity:.8;pointer-events:none}
+.pieces{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.rule{font-size:.82rem;color:var(--muted);margin-top:4px}
+.rule.req{color:var(--warn);font-weight:500}
+.card.auto[data-state="na"]{opacity:.62}
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:560px){.rules{grid-template-columns:minmax(0,1fr)}}
+.opt.pc{min-height:48px;font-size:.92rem;padding:0 14px;flex:0 0 auto;font-family:var(--f-data)}
+.opt.pc.done{border-style:dashed;color:var(--muted)}
+.opt.pc[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+@media (max-width:560px){
+  .filters{grid-template-columns:minmax(0,1fr)}
+  .verdict{font-size:2rem}
+  .stats{gap:8px}
+  .stats4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .maps{grid-template-columns:minmax(0,1fr)}
+}
+.doc{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px;margin-top:12px}
+.doc h1{font-size:1.35rem;font-weight:700;letter-spacing:.02em}
+.doc .co{font-size:.9rem;color:var(--muted);margin-top:2px}
+.dmeta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px;margin:14px 0;font-size:.88rem}
+.dmeta div{display:flex;gap:8px;border-bottom:1px solid var(--line);padding:4px 0;min-width:0}
+.dmeta b{font-weight:600;color:var(--muted);min-width:7.5em}
+.dmeta span{overflow-wrap:anywhere}
+.doct{border-collapse:collapse;width:100%;min-width:1180px;font-size:.72rem}
+.doct th,.doct td{border:1px solid var(--line);padding:3px 5px;text-align:left;white-space:nowrap}
+.doct thead th{background:var(--bg);font-weight:600;text-align:center;font-size:.68rem}
+.doct td.c{text-align:center;font-weight:700;width:1.6rem}
+.doct td.pass{color:var(--pass)}
+.doct td.fail{color:var(--fail)}
+.doct td.na{color:var(--muted);font-weight:400;font-size:.62rem}
+.doct td.rem{white-space:normal;min-width:140px;font-size:.68rem}
+.doct td.st{text-align:center;font-weight:700}
+.doct td.st.A{color:var(--pass)}.doct td.st.RWK{color:var(--warn)}.doct td.st.R{color:var(--fail)}
+.sig{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px;font-size:.85rem}
+.sig div{border-top:1px solid var(--line);padding-top:8px}
+.sig .ln{display:inline-block;min-width:150px;border-bottom:1px dotted var(--muted);margin-left:6px}
+.dleg{margin-top:14px;font-size:.75rem;color:var(--muted)}
+.dleg table{min-width:0;font-size:.75rem}
+.dleg td{border:0;padding:2px 10px 2px 0;white-space:normal}
+@media print{
+  .top,.submitbar,.noprint{display:none!important}
+  body{background:#fff;color:#000;padding:0}
+  main{padding:0}
+  .wrap{max-width:none}
+  .doc{border:0;padding:0;margin:0;background:#fff}
+  .tablewrap{overflow:visible;border:0;background:#fff}
+  .doct{min-width:0;font-size:6.5pt}
+  .doct th,.doct td{border-color:#888}
+  .doct thead th{background:#eee}
+  @page{size:A4 landscape;margin:8mm}
+}
+@media (max-width:560px){.dmeta,.sig{grid-template-columns:minmax(0,1fr)}}
+.grp .items{display:grid;margin-top:6px}
+.irow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:9px 0;border-top:1px solid var(--line);align-items:start}
+.irow:first-child{border-top:0}
+.irow .itxt{display:grid;gap:2px;min-width:0}
+.ilabel{font-size:.93rem}
+.irow.off{opacity:.5}
+.imark{font:700 1.05rem var(--f-body);min-width:2.4em;text-align:right}
+.imark.pass{color:var(--pass)}.imark.fail{color:var(--fail)}.imark.na{color:var(--muted);font-size:.75rem;font-weight:600}
+.irow .seg.mini,.irow .detail{grid-column:1/-1;margin-top:6px}
+.seg.mini .opt{min-height:44px;font-size:.95rem}
+.grp[data-state="pass"]{border-color:var(--pass)}
+.grp[data-state="fail"]{border-color:var(--fail)}
+.grp[data-state="na"]{opacity:.62}
+.grp .seg .opt{min-height:58px}
+.runhead .chips .pill{font-weight:500}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:100px;z-index:40;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:8px;font-weight:600;max-width:calc(100vw - 32px);box-shadow:0 4px 18px rgba(0,0,0,.25)}
+.toast.bad{background:var(--fail);color:#fff}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="top"><div class="wrap">
+  <div class="brand"><span class="mark" aria-hidden="true"></span><h1>Line Check</h1><span class="store" id="store">This device only</span><button type="button" class="btn ghost" id="installbtn" hidden style="min-height:36px;padding:0 12px;font-size:.85rem">Install</button></div>
+  <nav class="tabs" aria-label="Sections">
+    <button type="button" class="tab" id="tab-check" data-view="check">Check</button>
+    <button type="button" class="tab" id="tab-hourly" data-view="hourly">Hourly</button>
+    <button type="button" class="tab" id="tab-log" data-view="log">Log</button>
+    <button type="button" class="tab" id="tab-taglist" data-view="taglist">Taglist</button>
+  </nav>
+</div></header>
+<div class="wrap"><main id="main"></main></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div class="submitbar" id="bar" hidden><div class="wrap">
+  <button type="button" class="btn ghost" id="btn-cancel" data-act="cancel">Discard</button>
+  <p class="msg" id="bar-msg" role="status"></p>
+  <button type="button" class="btn primary" id="btn-submit" data-act="submit" disabled>Submit</button>
+</div></div>
+
+<script src="vendor/xlsx.min.js"></script>
+<script>
+//#PURE-START
+const STAGES={final:{label:'Final inspection',short:'Final'}};
+const STAGE_ORDER=['final'];
+/* Defect codes for the hourly defect checklist. Every checklist item carries one,
+   so a failed item tallies itself into the right column. */
+const CODES=[
+  ['D','Dimensions, extension or orientation differ from the sketch/drawing.'],
+  ['T','Tape peel, tape wrinkles, or is missing where required (including foil tape on a plain end).'],
+  ['S','Silicone sealing has gaps or misses a joint or corner, or a joined part is not sealed.'],
+  ['L','Acoustic liner is loose, liner cloth damaged, glasswool exposed, adhesive poor, or stick-up pins loose or missing.'],
+  ['F','A required tiger clip, tie rod, turning vane / splitter vane is missing, loose or misplaced.'],
+  ['B','Board is crushed, punctured or delaminated, or phenolic is exposed at a finished joint.'],
+  ['FL','End flange, end cap or connector is missing, loose, damaged, or not the type on the taglist.'],
+  ['O','Finish or identification: glue stains, marks or debris, or a missing or wrong label.']
+];
+const CODE_KEYS=CODES.map(c=>c[0]);
+/* The inspector confirms a whole group with one tap; a group opens into its items only when something fails. */
+const GROUPS=[['dim','Dimensions'],['con','Construction'],['end','Ends'],['lin','Liner'],['sea','Sealing & finish']];
+/* g = group, h = column head, a = short head for the PDF, code = defect code,
+   na = may be N/A, cond = required only for some pieces (decided by pieceRules) */
+const FINAL=[
+  {id:'f1', a:'Dim',g:'dim',h:'Dim',     code:'D', label:'Dimensions and extension match the sketch/drawing'},
+  {id:'f2', a:'Ori',g:'dim',h:'Orient',  code:'D', cond:'orient',label:'Orientation of pieces matches the drawing'},
+  {id:'f3', a:'Nck',g:'dim',h:'Neck',    code:'D', cond:'neck',label:'Neck size and machine connection as drawing'},
+  {id:'f4', a:'Brd',g:'con',h:'Board',   code:'B', label:'Board condition: no crush, puncture or delamination'},
+  {id:'f9', a:'Clp',g:'con',h:'Clips',   code:'F', cond:'clips',label:'Tiger clips (panel fasteners): spacing along seams and corners as the standard'},
+  {id:'f10',a:'Rod',g:'con',h:'Rods',    code:'F', cond:'rods',label:'Tie rods: number and location as the standard'},
+  {id:'f11',a:'Van',g:'con',h:'Vanes',   code:'F', cond:'vanes',label:'Turning vanes or splitter vanes: number and fixing as the standard'},
+  {id:'f7', a:'LS', g:'end',h:'LS end',  code:'FL',cond:'ends',label:'LS end: flange, end cap or tape as the taglist, fitted and undamaged'},
+  {id:'f8', a:'SS', g:'end',h:'SS end',  code:'FL',cond:'ends',label:'SS end: flange, end cap or tape as the taglist, fitted and undamaged'},
+  {id:'f13',a:'Lin',g:'lin',h:'Liner',   code:'L', cond:'liner',label:'Acoustic liner applied, edges tucked, not loose'},
+  {id:'f14',a:'Pin',g:'lin',h:'Pins',    code:'L', cond:'liner',label:'Stick-up pins: correct number, firmly fixed'},
+  {id:'f15',a:'Adh',g:'lin',h:'Adh',     code:'L', cond:'liner',label:'Adhesive applied properly'},
+  {id:'f16',a:'Clo',g:'lin',h:'Cloth',   code:'L', cond:'liner',label:'Liner cloth undamaged, no glasswool exposed'},
+  {id:'f18',a:'Sil',g:'sea',h:'Silicone',code:'S', label:'Silicone sealant complete inside joints and corners'},
+  {id:'f20',a:'ETp',g:'sea',h:'Ext tape',code:'T', label:'External tape: correct type and size, fully bonded'},
+  {id:'f21',a:'Cln',g:'sea',h:'Clean',   code:'O', label:'Clean: no glue stains, marks or debris'},
+  {id:'f22',a:'Lbl',g:'sea',h:'Label',   code:'O', label:'Kanban sticker or label present and correct'}
+];
+const FINAL_GROUPS=GROUPS.map(g=>[g[1],FINAL.filter(i=>i.g===g[0]),g[0]]);
+function checklistFor(stage){return FINAL}
+function groupName(gid){const g=GROUPS.find(x=>x[0]===gid);return g?g[1]:gid}
+function labelOf(id,fallback){const it=FINAL.find(x=>x.id===id);return it?it.label:(fallback||id)}
+
+/* ---- reading a taglist row ---- */
+/* End codes in the LS and SS columns */
+function endInfo(v){
+  const s=String(v==null?'':v).trim(),u=s.toUpperCase().replace(/\s+/g,'');
+  if(!s) return null;
+  if(u==='EC') return {t:'End cap',chk:'end cap fixed',code:'FL'};
+  if(u==='IF') return {t:'Invisible flange',chk:'fitted tight, undamaged',code:'FL'};
+  if(u==='U') return {t:'U flange',chk:'fitted tight, undamaged',code:'FL'};
+  if(u==='F') return {t:'F flange',chk:'fitted tight, undamaged',code:'FL'};
+  if(u==='H') return {t:'H / chair flange',chk:'fitted tight, undamaged',code:'FL'};
+  if(u==='WC') return {t:'WC, without connector',chk:'no metal connector, end finished as the drawing',code:'FL'};
+  if(u==='PLAIN') return {t:'Plain',chk:'foil tape covers the phenolic at the end',code:'T'};
+  if(/JOIN/.test(u)) return {t:'Join',chk:'joined to the next part, joint sealed and taped',code:'S',join:true};
+  return {t:s,chk:'as the taglist ('+s+')',code:'FL'};
+}
+function hasJoin(e){return !!e&&[e.ls,e.ss,e.rem].some(v=>/join/i.test(String(v==null?'':v)))}
+function isAps(e){return !!e&&/(^|[^a-z])aps([^a-z]|$)/i.test(String(e.rem||''))}
+/* true = lined, false = no liner, null = the taglist does not say */
+function linerOf(e){
+  if(!e) return null;
+  if(typeof e.liner==='string') return /liner/i.test(e.liner);
+  if(e.rem&&/(^|,)\s*liner\s*(,|$)/i.test(e.rem)) return true;
+  return null;
+}
+/* Reducer-LS / Reducer-SS: the extension or end cap is on that side of the piece */
+function suffixSide(desc){const m=String(desc||'').trim().match(/[-\s](ls|ss)$/i);return m?m[1].toUpperCase():''}
+function fmtSize(a){return a[0]+'×'+a[1]}
+function partKind(desc){
+  const d=String(desc||'').trim().toLowerCase();
+  return {mc:/^m\s*\/\s*c\b/.test(d),offset:/^offset/.test(d),reducer:/^reducer/.test(d)||/offset\s*reducer/.test(d),bend:/bend|elbow/.test(d),plm:/plm/.test(d)};
+}
+/* LS is the end with the bigger width. Width 2 of 0 means both ends are the same size.
+   On an offset, Width 2 and Depth 2 are the vertical and horizontal offsets, not sizes.
+   On a Linear PLM.Box, Width 2 is the neck opening and Depth 2 the neck extension. */
+function endSizes(e,k){
+  if(!(e&&e.w>0)) return null;
+  k=k||partKind(e.desc);
+  const a=[e.w,e.d||0];
+  const plainOffset=(k.offset&&!k.reducer)||k.plm;
+  const b=(plainOffset||!(e.w2>0))?a:[e.w2,e.d2>0?e.d2:(e.d||0)];
+  const bBig=b[0]>a[0];
+  const ls=bBig?b:a,ss=bBig?a:b;
+  return {ls,ss,same:ls[0]===ss[0]&&ls[1]===ss[1]};
+}
+function dimText(e,k){
+  const s=endSizes(e,k),bits=[];
+  if(s) bits.push(s.same?'Size '+fmtSize(s.ls):'LS '+fmtSize(s.ls)+', SS '+fmtSize(s.ss));
+  if(k.offset&&!k.reducer&&(e.w2>0||e.d2>0)) bits.push('offset '+[e.w2>0?e.w2+' mm vertical':'',e.d2>0?e.d2+' mm horizontal':''].filter(Boolean).join(', '));
+  if(k.plm&&(e.w2>0||e.d2>0)) bits.push([e.w2>0?'neck opening '+e.w2+' mm':'',e.d2>0?'neck extension '+e.d2+' mm':''].filter(Boolean).join(', '));
+  if(e.len>0) bits.push('length '+e.len+' mm');
+  if(e.ext>0){const sd=suffixSide(e.desc);bits.push('extension '+e.ext+' mm'+(sd?' on the '+sd+' side':' (side as the sketch)'))}
+  return bits.length?bits.join(' · ')+'.':'';
+}
+
+/* ---- which conditional items a piece needs ----
+   Tie rods: SMACNA Phenolic Duct Construction Standards, Table 5-4 (SI), 22 mm panel, "A" flange and
+   optional "B/C" flange transverse joints. The requirement applies to the duct width and the height
+   separately. Legend: "1 @ 900 mm" = rows of tie rods at most 900 mm apart, first and last row at most
+   450 mm from the joints; "1 / 2 / 3 @ 600 mm" = 1, 2 or 3 rods per row, rows at most 600 mm apart,
+   first and last at most 300 mm from the joints; "1 Centered" = one rod centred between the joints.
+   Over 2000 mm: consult the phenolic panel manufacturer.
+   Tiger clips (panel fasteners): SMACNA panel fastener table, ducts up to 2000 mm: at most 508 mm apart
+   along longitudinal seams and corners at 125-500 Pa, at most 254 mm at 750 and 1000 Pa (positive).
+   Splitter vanes: SMACNA Figure 4-4 (elbow, symmetric): duct width up to 508 mm none; over 508-813 mm
+   one at W/3; over 813-1626 mm two at W/4 and W/2; over 1626 mm three at W/8, W/3 and W/2, measured
+   from the throat at the duct interior; not in angles under 45 degrees.
+   Factory practice, as confirmed: pressure up to 500 Pa; no tie rods on pieces shorter than 300 mm;
+   all bends are radius bends (no square-throat); vanes only in bends over 45 degrees; none in reducers,
+   offsets or M/C pieces; tiger clips (used with adhesive) only on pieces over 1000 mm long with a side
+   over 500 mm. */
+const RULE_DEFAULTS={v:5,pressure:500,posOnly:false,rodMinLen:300,vaneAngle:45,clipMinLen:1000,clipSide:500};
+/* [largest side in the band, 250 Pa, 500 Pa, 750 Pa, 1000 Pa, positive-only] */
+const ROD_TABLE=[
+  [500,'','','','',''],
+  [600,'','','','1@900','1@900'],[700,'','','','1@900','1@900'],
+  [800,'','','1@900','1@900','1@600'],[900,'','','1@900','1@900','2@600'],
+  [1000,'','1@900','1@900','1@600','2@600'],[1100,'','1@900','1@900','1@600','2@600'],
+  [1200,'','','1@600','1@600','2@600'],[1300,'','','1@600','2@600','2@600'],
+  [1400,'','1C','1@600','2@600','2@600'],[1500,'','1C','1@600','2@600','3@600'],
+  [1600,'','1C','2@600','2@600','3@600'],[1700,'','1@600','2@600','2@600','3@600'],
+  [1800,'1C','1@600','2@600','2@600','3@600'],[1900,'1C','1@600','2@600','3@600','3@600'],
+  [2000,'1C','1@600','2@600','3@600','3@600']];
+const PRESSURES=[250,500,750,1000];
+function pressureCol(R){if(R.posOnly) return 4;for(let i=0;i<PRESSURES.length;i++) if(R.pressure<=PRESSURES[i]) return i;return 3}
+function pressureLabel(R){return R.posOnly?'positive pressure only':'up to '+PRESSURES[pressureCol(R)]+' Pa'}
+function rodSpec(side,R){
+  if(!(side>0)) return null;
+  if(side>2000) return {consult:true};
+  const row=ROD_TABLE.find(r=>side<=r[0]),v=row[1+pressureCol(R)];
+  if(!v) return {none:true};
+  if(v==='1C') return {across:1,centered:true,text:'1 centred between the joints'};
+  const m=v.match(/^(\d)@(\d+)$/);
+  return {across:+m[1],spacing:+m[2],text:m[1]+' @ '+m[2]+' mm'};
+}
+/* rows along the piece: rows at most "spacing" apart, the end rows at most half of it from the joints */
+function rodRows(spec,len){if(!spec||spec.none||spec.consult) return 0;if(spec.centered) return 1;return len>0?Math.max(1,Math.ceil(len/spec.spacing)):null}
+function clipSpacing(R){return (R.posOnly||R.pressure>500)?254:508}
+function splitterSpec(w){
+  if(!(w>508)) return {n:0,pos:[]};
+  if(w<=813) return {n:1,pos:[[1,3]]};
+  if(w<=1626) return {n:2,pos:[[1,4],[1,2]]};
+  return {n:3,pos:[[1,8],[1,3],[1,2]]};
+}
+function splitterCount(w){return splitterSpec(w).n}
+function bendAngle(desc){const m=String(desc||'').match(/(\d+(?:\.\d+)?)\s*[º°]/);return m?parseFloat(m[1]):90}
+const COND_IDS=['f2','f3','f9','f10','f11','f7','f8','f13','f14','f15','f16'];
+function pieceRules(e,rules){
+  const R=Object.assign({},RULE_DEFAULTS,rules||{}),out={};
+  if(!e){
+    const u='This label is not in a loaded taglist, so the rule cannot be checked. Decide from the drawing.';
+    COND_IDS.forEach(id=>{out[id]={on:true,unknown:true,why:u}});
+    return out;
+  }
+  const k=partKind(e.desc),name=e.desc||'this part',aps=isAps(e);
+  const dt=dimText(e,k),apsNote=aps?' APS: confirm the size on the sketch.':'';
+  out.f1={on:true,why:(dt||'No size in the taglist.')+(aps?' APS: check against the sketch.':'')};
+  out.f2=(k.mc||k.offset||k.reducer)?{on:true,why:'Checked on '+name+'.'}:{on:false,why:'Only checked on M/C, Offset and Reducer pieces.'};
+  out.f3=k.mc?{on:true,why:'Checked on M/C pieces.'}
+    :k.plm?{on:true,why:'Linear PLM.Box: neck opening '+(e.w2>0?e.w2+' mm':'as the drawing')+', neck extension '+(e.d2>0?e.d2+' mm':'as the drawing')+'.'}
+    :{on:false,why:'Only checked on M/C pieces and Linear PLM.Box necks.'};
+  if(!(e.w>0)&&!(e.d>0)){
+    const u='The taglist has no duct size for this piece, so the standard cannot be checked. Decide from the drawing.';
+    out.f9={on:true,unknown:true,why:u};
+    out.f10={on:true,unknown:true,why:u};
+    out.f11=k.bend?{on:true,unknown:true,why:u}:{on:false,why:'Vanes only apply to bends.'};
+  }else{
+    /* sides of the duct: the bigger of the two ends of a reducer or M/C (an offset's or PLM box's width 2 / depth 2 are not sizes) */
+    const s=endSizes(e,k)||{ls:[e.w||0,e.d||0],ss:[e.w||0,e.d||0]};
+    const W=Math.max(s.ls[0],s.ss[0]),Dp=Math.max(s.ls[1],s.ss[1]),big=Math.max(W,Dp);
+    /* tiger clips: used with adhesive on pieces over 1000 mm long with a side over 500 mm */
+    if(big>2000) out.f9={on:true,unknown:true,why:'Duct over 2000 mm: panel fastener spacing to be agreed with the phenolic panel manufacturer.'};
+    else if(!(e.len>0)) out.f9={on:true,unknown:true,why:'The taglist has no length for this piece. Tiger clips go on pieces over '+R.clipMinLen+' mm long with a side over '+R.clipSide+' mm.'};
+    else if(e.len>R.clipMinLen&&big>R.clipSide) out.f9={on:true,why:'At most '+clipSpacing(R)+' mm apart along every longitudinal seam and corner ('+(clipSpacing(R)===508?'125-500 Pa':'750-1000 Pa')+'): the piece is '+e.len+' mm long with a '+big+' mm side.'};
+    else out.f9={on:false,why:'Not required: tiger clips only on pieces over '+R.clipMinLen+' mm long with a side over '+R.clipSide+' mm (this one is '+e.len+' mm long, largest side '+big+' mm).'};
+    /* tie rods, Table 5-4, for the width and the height separately */
+    if(e.len>0&&e.len<R.rodMinLen) out.f10={on:false,why:'Not required: the piece is '+e.len+' mm long, under '+R.rodMinLen+' mm.'};
+    else{
+      const sides=[['Width',W],['Depth',Dp]].filter(x=>x[1]>0).map(x=>({n:x[0],v:x[1],sp:rodSpec(x[1],R)}));
+      const consult=sides.some(x=>x.sp&&x.sp.consult),need=sides.filter(x=>x.sp&&!x.sp.none&&!x.sp.consult);
+      const txt=x=>x.n+' '+x.v+' mm: '+(x.sp.consult?'over 2000 mm, consult the panel manufacturer':x.sp.none?'not required':x.sp.text+(e.len>0?' ('+x.sp.across+' rod'+(x.sp.across>1?'s':'')+' per row, '+rodRows(x.sp,e.len)+' row'+(rodRows(x.sp,e.len)>1?'s':'')+' on this '+e.len+' mm piece)':''));
+      const tail=' SMACNA Table 5-4, '+pressureLabel(R)+'.'+apsNote;
+      if(consult) out.f10={on:true,unknown:true,why:sides.map(txt).join('; ')+'.'+tail};
+      else if(need.length) out.f10={on:true,why:'Required. '+sides.map(txt).join('; ')+'.'+tail,
+        expect:need.reduce((n,x)=>n+x.sp.across*(rodRows(x.sp,e.len)||1),0)};
+      else out.f10={on:false,why:'Not required: '+sides.map(x=>x.n.toLowerCase()+' '+x.v+' mm').join(', ')+'.'+tail};
+    }
+    /* vanes: splitter vanes in radius bends over 45 degrees, SMACNA Figure 4-4, by the duct width */
+    if(k.bend){
+      const ang=bendAngle(e.desc),sp=splitterSpec(W);
+      if(!(ang>R.vaneAngle)) out.f11={on:false,why:'Not required: a '+ang+'\u00b0 bend; splitter vanes only in bends over '+R.vaneAngle+'\u00b0.'};
+      else if(!sp.n) out.f11={on:false,why:'Not required: duct width '+W+' mm is 508 mm or less (SMACNA Figure 4-4).'+apsNote};
+      else out.f11={on:true,expect:sp.n,why:'Required: '+sp.n+' splitter vane'+(sp.n>1?'s':'')+' for a '+ang+'\u00b0 bend, duct width '+W+' mm, at '
+        +sp.pos.map(f=>'W/'+f[1]+' = '+Math.round(W*f[0]/f[1])+' mm').join(', ')+' from the throat (SMACNA Figure 4-4).'+apsNote};
+    }else out.f11={on:false,why:'Vanes only apply to bends.'};
+  }
+  /* ends, from the LS and SS columns */
+  const cols=(e.ls!=null||e.ss!=null);
+  [['f7','LS',e.ls],['f8','SS',e.ss]].forEach(x=>{
+    const inf=endInfo(x[2]);
+    if(!cols) out[x[0]]={on:true,unknown:true,why:'The taglist has no LS / SS columns. Check the end against the drawing.'};
+    else if(!inf) out[x[0]]={on:true,unknown:true,why:'No end type in the taglist for the '+x[1]+' side. Check the sketch.'};
+    else{
+      let why=inf.t+': '+inf.chk;
+      if(inf.t==='End cap'&&e.ec>0) why+=' ('+e.ec+' end cap'+(e.ec>1?'s':'')+' on this piece)';
+      out[x[0]]={on:true,why:why+'.',code:inf.code,end:inf.t};
+    }
+  });
+  /* liner, from the Liner / Clad column */
+  const ln=linerOf(e);
+  ['f13','f14','f15','f16'].forEach(id=>{
+    out[id]=ln===true?{on:true,why:'Lined duct.'}
+      :ln===false?{on:false,why:'No liner on this piece (Liner / Clad column).'}
+      :{on:true,unknown:true,why:'The taglist does not say whether this piece is lined. Tick N/A if it has no liner.'};
+  });
+  return out;
+}
+/* A joined assembly is inspected once. An item is needed if any part needs it. */
+function mergeRules(parts){
+  if(parts.length===1) return parts[0].app;
+  const out={},ids=[];
+  parts.forEach(p=>Object.keys(p.app).forEach(id=>{if(ids.indexOf(id)<0) ids.push(id)}));
+  ids.forEach(id=>{
+    const rs=parts.map(p=>({tag:p.tag,r:p.app[id]})).filter(x=>x.r);
+    const on=rs.some(x=>x.r.on),unknown=rs.some(x=>x.r.on&&x.r.unknown);
+    const whys=[];rs.forEach(x=>{if(x.r.why&&whys.indexOf(x.r.why)<0) whys.push(x.r.why)});
+    const why=whys.length<=1?(whys[0]||''):rs.filter(x=>x.r.why).map(x=>x.tag+': '+x.r.why).join(' | ');
+    const c=rs.find(x=>x.r.on&&x.r.code);
+    out[id]={on,unknown,why,code:c?c.r.code:undefined};
+  });
+  return out;
+}
+/* items the rules say a piece does not need start as N/A */
+function presetAnswers(app){
+  const a={};
+  for(const id in (app||{})) if(app[id]&&!app[id].on) a[id]={r:'na',auto:true};
+  return a;
+}
+function rulesText(rules){
+  const R=Object.assign({},RULE_DEFAULTS,rules||{});
+  return 'Orientation: M/C, Offset and Reducer pieces only. Neck and machine connection: M/C, and the neck of a Linear PLM.Box (Width 2 = neck opening, Depth 2 = neck extension). '
+    +'Ends: checked against the LS / SS columns of the taglist (EC end cap fixed; IF, U, F, H flange fitted; WC no connector; Plain foil tape over the phenolic; Join sealed and taped to the next part). '
+    +'Liner, stick-up pins, adhesive and cloth: N/A where the Liner / Clad column has no liner. '
+    +'Tiger clips (panel fasteners): at most '+clipSpacing(R)+' mm apart along longitudinal seams and corners, ducts up to 2000 mm (SMACNA panel fastener table). '
+    +'Tie rods: SMACNA Table 5-4 (22 mm panel, A and B/C flange joints), '+pressureLabel(R)+', for the duct width and height separately; not on pieces under '+R.rodMinLen+' mm long. '
+    +'Tiger clips only on pieces over '+R.clipMinLen+' mm long with a side over '+R.clipSide+' mm (used with adhesive). '
+    +'Splitter vanes: radius bends over '+R.vaneAngle+'\u00b0 only, by duct width (SMACNA Figure 4-4): up to 508 mm none; over 508-813 mm 1 at W/3; over 813-1626 mm 2 at W/4 and W/2; over 1626 mm 3 at W/8, W/3 and W/2, from the throat. No vanes in reducers, offsets or M/C pieces. '
+    +'Reducer tapers as the sketch. Joined parts are inspected as one assembly. Otherwise N/A.';
+}
+/* N/A is the answer where a rule says the piece does not need the item, and is not
+   allowed where the rule says it does; the inspector decides where the rule cannot run */
+function naOk(item,app){
+  const r=app&&app[item.id];
+  if(r) return !r.on||!!r.unknown;
+  return !!item.na;
+}
+function stageLabel(s,short){const x=STAGES[s];return x?(short?x.short:x.label):String(s||'')}
+function answered(it,app,a){
+  if(!a) return false;
+  return a.r==='pass'||a.r==='fail'||(a.r==='na'&&naOk(it,app));
+}
+function openCount(app,answers){
+  return FINAL.filter(it=>!answered(it,app,(answers||{})[it.id])).length;
+}
+/* Group tick: every item the piece needs, and the rule can decide, passes. Items the rules
+   leave to the inspector (sketch, APS, not in the taglist) stay open for an explicit answer. */
+function groupOk(gid,app,answers){
+  const out=Object.assign({},answers);
+  FINAL.filter(it=>it.g===gid).forEach(it=>{
+    const r=app&&app[it.id],a=out[it.id];
+    if(r&&!r.on){if(!a||a.r!=='na') out[it.id]={r:'na',auto:true};return}
+    if(r&&r.unknown) return;
+    if(a&&a.r==='fail') return;
+    out[it.id]={r:'pass'};
+  });
+  return out;
+}
+function groupState(gid,app,answers){
+  const its=FINAL.filter(it=>it.g===gid);
+  const st=its.map(it=>{const a=(answers||{})[it.id];return answered(it,app,a)?a.r:'open'});
+  if(st.indexOf('fail')>=0) return 'fail';
+  if(st.indexOf('open')>=0) return 'open';
+  if(st.every(s=>s==='na')) return 'na';
+  return 'pass';
+}
+function buildRecord(stage,code,answers,ts,id,inspector,info){
+  const app=(info&&info.app)||null;
+  const items=checklistFor(stage).map(it=>{
+    const a=answers[it.id]||{};
+    const r=answered(it,app,a)?a.r:'open';
+    const code=(app&&app[it.id]&&app[it.id].code)||it.code||'';
+    return {id:it.id,code,r,note:r==='fail'?(a.note||'').trim():''};
+  });
+  const defects=items.filter(i=>i.r==='fail').length;
+  const i=info||{};
+  const num=(v,min)=>(typeof v==='number'&&isFinite(v)&&v>=min)?v:null;
+  const qty=num(i.qty,1)==null?1:Math.round(i.qty);
+  const pieceNo=num(i.pieceNo,1)==null?1:Math.round(i.pieceNo);
+  const perPiece=num(i.perPiece,0);
+  const base=i.tag||'';
+  return {id,code:String(code).trim(),stage,ts,inspector:String(inspector||'').trim(),verdict:defects?'FAIL':'PASS',defects,items,
+    tag:pieceTag(base,pieceNo,qty),baseTag:base,pieceNo,taglist:i.taglist||'',desc:i.desc||'',qty,pieces:1,perPiece,
+    area:perPiece==null?null:perPiece,liner:i.liner===true?true:i.liner===false?false:null,asm:i.asm||''};
+}
+/* Per part of an assembly: what the part itself does not need is N/A on its own record. */
+function answersForPart(answers,partApp){
+  const out={};
+  for(const id in answers) out[id]=Object.assign({},answers[id]);
+  for(const id in (partApp||{})) if(partApp[id]&&!partApp[id].on) out[id]={r:'na',auto:true};
+  return out;
+}
+function pad2(n){return String(n).padStart(2,'0')}
+function dateKey(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())}
+/* Day shift 07:00-19:00. Night shift 19:00-07:00 belongs to the date it started. */
+function shiftInfo(ts){
+  const d=new Date(ts),h=d.getHours();
+  if(h>=7&&h<19) return {date:dateKey(d),shift:'Day',slot:h-7,hour:h};
+  if(h>=19) return {date:dateKey(d),shift:'Night',slot:h-19,hour:h};
+  const p=new Date(d.getFullYear(),d.getMonth(),d.getDate()-1);
+  return {date:dateKey(p),shift:'Night',slot:h+5,hour:h};
+}
+function slotHour(shift,slot){return shift==='Day'?7+slot:(slot<=4?19+slot:slot-5)}
+function slotStart(date,shift,slot){
+  const a=date.split('-').map(Number),off=shift==='Night'&&slot>=5?1:0;
+  return new Date(a[0],a[1]-1,a[2]+off,slotHour(shift,slot)).getTime();
+}
+function hourLabel(h){return pad2(h)+':00-'+pad2((h+1)%24)+':00'}
+function topLabels(map,n){
+  return Object.keys(map).map(k=>[k,map[k]]).sort((a,b)=>b[1]-a[1]||(a[0]<b[0]?-1:1)).slice(0,n);
+}
+/* A defect is a failed item. It counts in the hour the inspection was submitted.
+   Passed area counts pieces that passed; lined area is the part of it with acoustic liner. */
+function hourBuckets(records,date,shift,stage,now){
+  const rows=[];
+  const blank=()=>({checked:0,failed:0,defects:0,pieces:0,piecesFailed:0,area:0,failedArea:0,passedArea:0,linerArea:0,unknown:0,codes:{}});
+  for(let s=0;s<12;s++){
+    const st=slotStart(date,shift,s);
+    rows.push(Object.assign(blank(),{slot:s,hour:slotHour(shift,s),start:st,future:now!=null&&st>now,labels:{}}));
+  }
+  for(const r of records){
+    if(stage&&stage!=='all'&&r.stage!==stage) continue;
+    const si=shiftInfo(r.ts);
+    if(si.date!==date||si.shift!==shift) continue;
+    const row=rows[si.slot];
+    const pc=r.pieces>=1?r.pieces:1;
+    row.checked++;row.pieces+=pc;
+    if(r.verdict==='FAIL'){row.failed++;row.piecesFailed+=pc}
+    if(typeof r.area==='number'){
+      row.area+=r.area;
+      if(r.verdict==='FAIL') row.failedArea+=r.area;
+      else{row.passedArea+=r.area;if(r.liner===true) row.linerArea+=r.area}
+    }else row.unknown++;
+    for(const it of r.items) if(it.r==='fail'){
+      const lb=labelOf(it.id,it.label);
+      row.defects++;row.labels[lb]=(row.labels[lb]||0)+1;
+      if(it.code) row.codes[it.code]=(row.codes[it.code]||0)+1;
+    }
+  }
+  const totals=blank(),all={};
+  rows.forEach(r=>{
+    r.top=topLabels(r.labels,1);
+    ['checked','failed','defects','pieces','piecesFailed','area','failedArea','passedArea','linerArea','unknown'].forEach(k=>{totals[k]+=r[k]});
+    for(const k in r.codes) totals.codes[k]=(totals.codes[k]||0)+r.codes[k];
+    for(const k in r.labels) all[k]=(all[k]||0)+r.labels[k];
+  });
+  return {rows,totals,top:topLabels(all,5)};
+}
+function hourReport(date,shift,stageLabel,b){
+  const L=['Hourly defects, '+date+', '+shift+' shift ('+stageLabel+')'];
+  b.rows.forEach(r=>{
+    if(r.future) return;
+    L.push(hourLabel(r.hour)+'  checked '+r.pieces+', failed '+r.piecesFailed+', defects '+r.defects+(r.passedArea>0?', passed '+r.passedArea.toFixed(2)+' m2 (lined '+r.linerArea.toFixed(2)+' m2)':'')+(r.defects&&r.top.length?'; most frequent: '+r.top[0][0]+' x'+r.top[0][1]:''));
+  });
+  const t=b.totals;
+  L.push('Total: checked '+t.pieces+', failed '+t.piecesFailed+', defects '+t.defects+', passed '+t.passedArea.toFixed(2)+' m2, lined passed '+t.linerArea.toFixed(2)+' m2');
+  return L.join('\n');
+}
+
+/* ---- taglist upload ---- */
+function parseCsv(text){
+  text=String(text).replace(/^﻿/,'');
+  const first=text.split(/\r?\n/,1)[0]||'';
+  const cnt=c=>first.split(c).length-1;
+  let d=',';if(cnt(';')>cnt(d)) d=';';if(cnt('\t')>cnt(d)) d='\t';
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"') q=true;
+    else if(c===d){row.push(f);f=''}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n') i++;row.push(f);f='';rows.push(row);row=[]}
+    else f+=c;
+  }
+  if(f!==''||row.length){row.push(f);rows.push(row)}
+  return rows.filter(r=>r.some(x=>String(x).trim()!==''));
+}
+function normKey(s){
+  let t=String(s==null?'':s).trim().replace(/\s+/g,'').toUpperCase();
+  if(/^\d+$/.test(t)) t=t.replace(/^0+(?=\d)/,'');
+  return t;
+}
+function parseArea(s){
+  let t=String(s==null?'':s).trim().replace(/\s/g,'');
+  if(t.indexOf(',')>=0&&t.indexOf('.')>=0) t=t.replace(/,/g,'');else t=t.replace(',','.');
+  if(!/^-?(\d+\.?\d*|\.\d+)$/.test(t)) return null;
+  return parseFloat(t);
+}
+const AREA_RE=/area|m2|m²|sqm|square/i;
+function areaCols(h){return h.map((x,j)=>[j,String(x).trim()]).filter(c=>AREA_RE.test(c[1]))}
+function colTotal(data,i){
+  if(i<0) return 0;
+  let n=0;for(const r of data){const v=parseArea(r[i]);if(v!=null) n+=v}
+  return n;
+}
+const MAP_KEYS=['key','tl','tag','area','qty','desc','w','d','w2','d2','len','ext','ec','ls','ss','liner','rem'];
+function guessMap(h){
+  const used={},m={};MAP_KEYS.forEach(k=>{m[k]=-1});
+  const pick=(name,re)=>{
+    if(m[name]>=0) return;
+    const i=h.findIndex((x,j)=>!used[j]&&re.test(String(x)));
+    if(i>=0){m[name]=i;used[i]=1}
+  };
+  pick('key',/unique|barcode|label|serial/i);pick('tl',/taglist/i);pick('tag',/tag/i);
+  /* a file with both an internal and an external area: production counts the internal one */
+  pick('area',/internal\s*area/i);pick('area',AREA_RE);
+  pick('qty',/quantity|qty|pcs|pieces|no\.? of/i);
+  pick('ls',/^\s*ls\b|long\s*side/i);pick('ss',/^\s*ss\b|short\s*side/i);
+  pick('liner',/liner|clad/i);pick('rem',/remark/i);
+  pick('ext',/extension/i);pick('ec',/^\s*end\s*cap/i);
+  pick('desc',/part|desc/i);
+  pick('w2',/^\s*width\s*2\s*$/i);pick('d2',/^\s*(depth|height)\s*2\s*$/i);
+  pick('w',/^\s*width\s*$/i);pick('d',/^\s*(depth|height)\s*$/i);pick('len',/^\s*length\s*$/i);
+  return m;
+}
+function parseQty(v){
+  const n=parseArea(v);
+  if(n==null||n<1) return null;
+  return Math.round(n);
+}
+/* One row can cover several identical pieces that all carry the same barcode,
+   and its area column covers the whole quantity, so each piece gets area / quantity. */
+function isAdjustment(tag){return /^\s*adjust/i.test(String(tag||''))}
+function makeEntries(data,map){
+  const rows=[],seen={};let skipped=0,noArea=0,dups=0,sci=0,noQty=0,pieces=0,adjust=0;
+  for(const r of data){
+    const raw=String(r[map.key]==null?'':r[map.key]).trim(),k=normKey(raw);
+    if(!k){skipped++;continue}
+    if(map.tag>=0&&isAdjustment(r[map.tag])){adjust++;continue}
+    if(/^\d+(\.\d+)?e\+\d+$/i.test(raw)) sci++;
+    const a=map.area>=0?parseArea(r[map.area]):null;
+    if(a==null) noArea++;
+    const qr=(map.qty>=0)?parseQty(r[map.qty]):null;
+    if(map.qty>=0&&qr==null) noQty++;
+    const q=qr==null?1:qr;
+    pieces+=q;
+    if(seen[k]) dups++;
+    seen[k]=1;
+    const g=i=>i>=0?String(r[i]==null?'':r[i]).trim():'';
+    const opt=i=>i>=0?g(i):null;
+    const mm=i=>{if(!(i>=0)) return null;const v=parseArea(r[i]);return v==null?null:v};
+    rows.push({k,raw,tag:g(map.tag),tl:g(map.tl),desc:g(map.desc),a,q,pp:a==null?null:a/q,
+      w:mm(map.w),d:mm(map.d),w2:mm(map.w2),d2:mm(map.d2),len:mm(map.len),ext:mm(map.ext),ec:mm(map.ec),
+      ls:opt(map.ls),ss:opt(map.ss),liner:opt(map.liner),rem:opt(map.rem)});
+  }
+  return {rows,skipped,noArea,dups,sci,noQty,pieces,adjust};
+}
+/* A daily planning file can hold several taglists. Each becomes its own taglist,
+   so each gets its own checklist. Rows with no taglist name keep the file's name. */
+function splitByTaglist(rows,fallback){
+  const order=[],by={};
+  rows.forEach(e=>{const n=e.tl||fallback;if(!by[n]){by[n]=[];order.push(n)}by[n].push(e)});
+  return order.map(n=>({name:n,rows:by[n],pieces:by[n].reduce((s,e)=>s+(e.q>=1?e.q:1),0)}));
+}
+/* taglists are stored newest first, so the newest row wins when a number repeats */
+function buildIndex(tls){
+  const idx=Object.create(null);
+  for(const t of tls) for(const e of t.rows){(idx[e.k]||(idx[e.k]=[])).push(Object.assign({},e,{q:e.q>=1?e.q:1,pp:e.pp==null?e.a:e.pp,src:t.name}))}
+  return idx;
+}
+function lookupKey(idx,code){
+  const l=idx[normKey(code)];
+  return l?{entry:l[0],n:l.length}:null;
+}
+/* Parts of one duct: tags that differ only by a trailing letter (FF3-97, FF3-97a) on the same
+   taglist, where any of them says Join in the LS, SS or remarks column. */
+function baseTagOf(tag){const t=String(tag==null?'':tag).trim(),m=t.match(/^(.*\d)[A-Za-z]+$/);return m?m[1]:t}
+function buildAsm(tls){
+  const out=Object.create(null);
+  for(const t of tls){
+    const g={},order=[];
+    t.rows.forEach(e=>{const b=(e.tl||t.name)+'|'+baseTagOf(e.tag).toUpperCase();if(!g[b]){g[b]=[];order.push(b)}g[b].push(e)});
+    order.forEach(b=>{
+      const m=g[b];
+      if(m.length<2||!m.some(hasJoin)||!m.some(e=>baseTagOf(e.tag)!==String(e.tag).trim())) return;
+      const members=m.slice().sort((x,y)=>String(x.tag).length-String(y.tag).length||String(x.tag).localeCompare(String(y.tag)))
+        .map(e=>Object.assign({},e,{q:e.q>=1?e.q:1,pp:e.pp==null?e.a:e.pp,src:t.name}));
+      const a={base:baseTagOf(m[0].tag),tl:m[0].tl||t.name,members};
+      m.forEach(e=>{if(!out[e.k]) out[e.k]=a});
+    });
+  }
+  return out;
+}
+/* The pieces one inspection can cover: every piece on the barcode, or every piece of an assembly */
+function unitsFor(entry,asm){
+  const list=asm?asm.members:(entry?[entry]:[]),u=[];
+  list.forEach(e=>{const q=e.q>=1?e.q:1;for(let n=1;n<=q;n++) u.push({uid:e.k+'#'+n,k:e.k,n,q,e,tag:pieceTag(e.tag,n,q)})});
+  return u;
+}
+function recordsCsv(list){
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const head=['id','production_date','shift','time','stage','code','tag','taglist','assembly','pieces_checked','row_quantity','area_per_piece_m2','area_m2','lined','inspector','verdict','defects','failed_items','notes'];
+  const rows=list.map(r=>{
+    const si=shiftInfo(r.ts),f=r.items.filter(i=>i.r==='fail'),d=new Date(r.ts);
+    return [r.id,si.date,si.shift,dateKey(d)+' '+pad2(d.getHours())+':'+pad2(d.getMinutes()),stageLabel(r.stage),r.code,r.tag||'',r.taglist||'',r.asm||'',
+      r.pieces>=1?r.pieces:1,r.qty>=1?r.qty:1,typeof r.perPiece==='number'?Math.round(r.perPiece*1000)/1000:'',
+      typeof r.area==='number'?Math.round(r.area*1000)/1000:'',r.liner===true?'yes':r.liner===false?'no':'',r.inspector,r.verdict,r.defects,f.map(i=>labelOf(i.id,i.label)).join('; '),f.map(i=>i.note).filter(Boolean).join('; ')];
+  });
+  return [head].concat(rows).map(a=>a.map(q).join(',')).join('\n');
+}
+
+/* ---- taglist progress and the per-taglist checklist ---- */
+/* One taglist row can cover several pieces on one barcode, so a row counts as covered
+   once as many pieces have been inspected as the row holds. */
+function taglistProgress(tl,records){
+  const byKey=Object.create(null);
+  for(const r of records){
+    const k=normKey(r.code);
+    if(!k) continue;
+    (byKey[k]||(byKey[k]=[])).push(r);
+  }
+  let covered=0,sl=0,passedArea=0,linerArea=0;
+  const counts={A:0,R:0,RWK:0},rows=[];
+  (tl.rows||[]).forEach(e=>{
+    const q=e.q>=1?e.q:1;
+    const all=(byKey[e.k]||[]).slice().sort((a,b)=>a.ts-b.ts);
+    const pp=e.pp==null?(e.a==null?null:e.a/q):e.pp;
+    for(let n=1;n<=q;n++){
+      const recs=all.filter(r=>pieceNoOf(r)===n);
+      if(recs.length) covered++;
+      const crit={};
+      FINAL.forEach(it=>{
+        let st='';
+        recs.forEach(r=>{const x=(r.items||[]).find(y=>y.id===it.id);if(x&&x.r!=='open') st=x.r});
+        crit[it.id]=st;
+      });
+      const notes=[];
+      recs.forEach(r=>(r.items||[]).forEach(x=>{if(x.r==='fail'&&x.note&&notes.indexOf(x.note)<0) notes.push(x.note)}));
+      let status='';
+      if(recs.length){
+        status=recs[recs.length-1].verdict==='FAIL'?'R':(recs.some(r=>r.verdict==='FAIL')?'RWK':'A');
+        counts[status]++;
+        if(status!=='R'&&pp!=null){passedArea+=pp;if(linerOf(e)===true) linerArea+=pp}
+      }
+      rows.push({e,sl:++sl,n,q,tag:pieceTag(e.tag,n,q),recs,crit,notes,status,
+        last:recs.length?recs[recs.length-1].ts:0});
+    }
+  });
+  const totalArea=(tl.rows||[]).reduce((s,e)=>s+(e.a||0),0);
+  return {rows,pieces:rows.length,covered,done:covered,total:rows.length,counts,passedArea,linerArea,totalArea,
+    complete:rows.length>0&&covered===rows.length};
+}
+/* which piece numbers on this barcode already have a record */
+function donePieces(records,code){
+  const k=normKey(code),out=[];
+  for(const r of records) if(normKey(r.code)===k){const n=pieceNoOf(r);if(out.indexOf(n)<0) out.push(n)}
+  return out.sort((a,b)=>a-b);
+}
+function pct(a,b){return b>0?Math.round(a/b*100):0}
+/* Pieces on one row share a barcode, so each gets its own tag number: AC-65-1, AC-65-2. */
+function pieceTag(tag,n,q){return q>1?String(tag)+'-'+n:String(tag)}
+function pieceNoOf(r){return r.pieceNo>=1?Math.round(r.pieceNo):1}
+const TICK={pass:'✓',fail:'✗',na:'N/A'};
+function areaLine(pr){return pr.passedArea.toFixed(2)+' m² passed, of which '+pr.linerArea.toFixed(2)+' m² lined (taglist total '+pr.totalArea.toFixed(2)+' m²)'}
+function checklistAoa(tl,pr,meta){
+  const head1=['','',''],head2=['SL','Tag ID','Description'];
+  FINAL_GROUPS.forEach(g=>g[1].forEach((it,j)=>{head1.push(j===0?g[0]:'');head2.push(it.h)}));
+  head1.push('','');head2.push('Remarks','A / R / RWK');
+  const rows=pr.rows.map(r=>{
+    const a=[r.sl,r.tag,r.e.desc];
+    FINAL.forEach(it=>a.push(TICK[r.crit[it.id]]||''));
+    a.push(r.notes.join('; '),r.status);
+    return a;
+  });
+  const out=[['QC CHECKLIST - FINAL INSPECTION'],[meta.company||''],[],
+    ['Project',meta.project||'','','Taglist',tl.name||''],
+    ['Document ref',meta.docref||'','','Generated',meta.when],
+    ['Pieces inspected',pr.covered+' of '+pr.pieces,'','Result','Approved '+pr.counts.A+', Reworked '+pr.counts.RWK+', Rejected '+pr.counts.R],
+    ['Passed area (m²)',Math.round(pr.passedArea*100)/100,'','Lined area passed (m²)',Math.round(pr.linerArea*100)/100],
+    [],head1,head2].concat(rows);
+  out.push([],['Checked by',meta.inspector||'','','Date','','','Signature','']);
+  out.push(['Cross checked by',meta.cross||'','','Date','','','Signature','']);
+  out.push([],['Legend','✓ accepted, ✗ defect found, N/A not applicable to this piece, blank not inspected']);
+  out.push(['A = approved, R = rejected, RWK = reworked and re-inspected']);
+  out.push(['Each group (Dimensions, Construction, Ends, Liner, Sealing & finish) was confirmed by the inspector; a group tick covers every item in it.']);
+  out.push([],['Inspection criteria']);
+  FINAL.forEach(it=>out.push([it.h,it.label,'code '+it.code]));
+  out.push([],['Conditional items',rulesText(meta.rules)]);
+  return out;
+}
+function hourlyAoa(date,shift,inspector,b){
+  const head=['Hour','Produced','Checked','Ducts failed','Passed m²','Lined m² passed'].concat(CODE_KEYS,['Findings','Action / recheck']);
+  const r2=v=>Math.round(v*100)/100;
+  const rows=b.rows.map(r=>{
+    const a=[hourLabel(r.hour),'',r.future?'':r.pieces,r.future?'':r.piecesFailed,r.future?'':r2(r.passedArea),r.future?'':r2(r.linerArea)];
+    CODE_KEYS.forEach(k=>a.push(r.future?'':(r.codes[k]||0)));
+    a.push(r.future?'':topLabels(r.labels,2).map(x=>x[0]+(x[1]>1?' x'+x[1]:'')).join('; '),'');
+    return a;
+  });
+  const t=b.totals;
+  const tot=['Shift totals','',t.pieces,t.piecesFailed,r2(t.passedArea),r2(t.linerArea)];
+  CODE_KEYS.forEach(k=>tot.push(t.codes[k]||0));
+  tot.push('Failure rate',t.pieces?(t.piecesFailed/t.pieces*100).toFixed(1)+'%':'0.0%');
+  const out=[[],['Hourly Defect Checklist'],['Specialite duct fabrication'],[],
+    ['Date',date,'','Shift',shift,'','','','','','','','','Inspector',inspector||''],[],head]
+    .concat(rows,[tot],[[],['Defect codes and rejection criteria']]);
+  CODES.forEach(c=>out.push([c[0],'',c[1]]));
+  out.push([],['Checked and Produced are counted in pieces. Produced is left blank for the line to fill in.'],
+    ['Ducts failed counts the pieces on inspections that failed, in the hour the inspection was submitted.'],
+    ['Passed m² is the internal area of pieces that passed in that hour; Lined m² passed is the part of it with acoustic liner.'],
+    ['Keep the initial failure count after rework. Record the action taken and the recheck result.'],
+    ['If the same defect appears on a second duct in the hour, have the line lead check the operation before releasing the suspect pieces.']);
+  return out;
+}
+function aoaCsv(aoa){
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  return aoa.map(r=>r.map(q).join(',')).join('\n');
+}
+function safeName(s){return String(s||'sheet').replace(/[^A-Za-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80)||'sheet'}
+
+/* ---- command barcodes for a ring scanner ---- */
+const COMMANDS=[
+  ['LC-OK-DIM','Dimensions OK','gok','dim'],['LC-OK-CON','Construction OK','gok','con'],['LC-OK-END','Ends OK','gok','end'],
+  ['LC-OK-LIN','Liner OK','gok','lin'],['LC-OK-SEA','Sealing & finish OK','gok','sea'],
+  ['LC-ALL','Select all remaining pieces','all',''],['LC-SUBMIT','Submit','submit',''],['LC-DISCARD','Discard this check','discard','']];
+function parseCommand(code){const c=String(code==null?'':code).trim().toUpperCase();return COMMANDS.find(x=>x[0]===c)||null}
+/* Code 128 (set B): module widths, bar first */
+const C128=['212222','222122','222221','121223','121322','131222','122213','122312','132212','221213','221312','231212','112232','122132','122231','113222','123122','123221','223211','221132','221231','213212','223112','312131','311222','321122','321221','312212','322112','322211','212123','212321','232121','111323','131123','131321','112313','132113','132311','211313','231113','231311','112133','112331','132131','113123','113321','133121','313121','211331','231131','213113','213311','213131','311123','311321','331121','312113','312311','332111','314111','221411','431111','111224','111422','121124','121421','141122','141221','112214','112412','122114','122411','142112','142211','241211','221114','413111','241112','134111','111242','121142','121241','114212','124112','124211','411212','421112','421211','212141','214121','412121','111143','111341','131141','114113','114311','411113','411311','113141','114131','311141','411131','211412','211214','211232','2331112'];
+function code128(text){
+  const vals=[104];
+  for(const ch of String(text)){const c=ch.charCodeAt(0);if(c<32||c>126) throw new Error('Code 128 B cannot hold '+ch);vals.push(c-32)}
+  let sum=104;for(let i=1;i<vals.length;i++) sum+=vals[i]*i;
+  vals.push(sum%103,106);
+  return vals.map(v=>C128[v]).join('').split('').map(Number);
+}
+//#PURE-END
+
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+function safeParse(s){try{const v=JSON.parse(s||'null');return Array.isArray(v)?v:null}catch(e){return null}}
+const hhmm=ts=>{const d=new Date(ts);return pad2(d.getHours())+':'+pad2(d.getMinutes())};
+const fmtTime=ts=>new Date(ts).toLocaleString(undefined,{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+const m2=v=>(Math.round((v||0)*100)/100).toFixed(2);
+
+/* ---------- Example records: one past day shift, shown until the first real inspection ---------- */
+function makeExamples(){
+  const y=new Date();y.setDate(y.getDate()-1);
+  const at=(h,m)=>new Date(y.getFullYear(),y.getMonth(),y.getDate(),h,m).getTime();
+  /* hour, minute, barcode, tag, part, quantity on the row, area each, failures */
+  const P=[
+    [7,15,'6463-3','AC-03','St. Duct',1,1.10],
+    [7,45,'6463-5','AC-05','Bend-90º',1,2.18,{f1:'Width 4 mm under the drawing'}],
+    [8,20,'6463-11','AC-11','St. Duct',1,0.48],
+    [8,50,'6463-16','AC-15a','Bend-90º',2,0.94],
+    [9,10,'6463-19','AC-18','St. Duct',1,1.74,{f14:'Two stick-up pins loose on the top panel',f15:'Adhesive missed along one edge'}],
+    [9,40,'6463-20','AC-19','St. Duct',1,1.22],
+    [10,15,'6463-24','AC-22','St. Duct',1,2.62,{f18:'Silicone gap at the second joint'}],
+    [10,45,'6463-27','AC-25','St. Duct',1,3.69],
+    [11,5,'6463-30','AC-28','St. Duct',1,3.38,{f4:'Board crushed at one corner, about 8 mm'}],
+    [11,25,'6463-33','AC-31','St. Duct',1,2.24,{f20:'External tape lifting along one edge'}],
+    [11,50,'6463-35','AC-33','Bend-90º',1,1.68,{f9:'Tiger clip missing on the second joint'}],
+    [12,20,'6463-37','AC-35','St. Duct',1,1.48],
+    [12,55,'6463-41','AC-38','M/C',1,0.55],
+    [13,15,'6463-44','AC-40','Bend-90º',1,3.11,{f21:'Glue stain on the outside face'}],
+    [13,45,'6463-46','AC-42','Reducer-SS',1,1.39],
+    [14,20,'6463-49','AC-45','Bend-90º',1,2.29],
+    [14,50,'6463-52','AC-48','Bend-90º',1,2.76,{f7:'Flange loose on the LS end'}],
+    [15,20,'6463-54','AC-50','St. Duct',1,1.34],
+    [15,55,'6463-57','AC-53','Bend-90º',1,1.31,{f16:'Liner cloth torn, glasswool showing at the end'}],
+    [16,30,'6463-60','AC-56','St. Duct',1,1.15],
+    [17,10,'6463-85','AC-81','Reducer-LS',7,0.386,{f2:'One piece fitted the wrong way round'}],
+    [17,40,'6463-86','AC-82','Box Shoe',5,0.418]
+  ];
+  const names=['M. Haddad','S. Varga','A. Noor'];
+  return P.map((e,i)=>{
+    const ans={},bad=e[7]||{};
+    FINAL.forEach(it=>{ans[it.id]=bad[it.id]?{r:'fail',note:bad[it.id]}:{r:'pass'}});
+    const r=buildRecord('final',e[2],ans,at(e[0],e[1]),'EX-'+pad2(i+1),names[i%3],
+      {tag:e[3],taglist:'SR-727-T4-1-VL15-AC-PR-ZEN-3382',desc:e[4],qty:e[5],pieceNo:1,perPiece:e[6],liner:true});
+    r.example=true;return r;
+  }).sort((a,b)=>b.ts-a.ts);
+}
+const EXAMPLES=makeExamples();
+
+/* ---------- State ---------- */
+const main=$('#main');
+let view='check',mode='scan',run=null,lastRec=null,lastBatch=[],lastCode='',saveErr=null,csvText=null,docId=null;
+let records=[],taglists=[],tlIndex=Object.create(null),asmIndex=Object.create(null),imp=null,tlMsg=null;
+let shared=null,dbState='device';
+const stage='final';
+let inspector=lsGet('lc-inspector')||'';
+let settings={company:'',docref:'Sample checklist — under test',cross:''};
+try{settings=Object.assign(settings,JSON.parse(lsGet('lc4-settings')||'{}'))}catch(e){}
+let rules=Object.assign({},RULE_DEFAULTS);
+try{const sv=JSON.parse(lsGet('lc5-rules')||'{}');if(sv&&sv.v>=2){['pressure','rodMinLen','vaneAngle','posOnly','clipMinLen','clipSide'].forEach(k=>{if(sv[k]!=null) rules[k]=sv[k]})}}catch(e){}
+let hsel={date:null,shift:null,stage:'all'},logFailedOnly=false;
+const source=()=>({real:records.length>0,list:records.length?records:EXAMPLES});
+function reindex(){tlIndex=buildIndex(taglists);asmIndex=buildAsm(taglists)}
+
+/* ---------- Storage on the phone ----------
+   IndexedDB holds thousands of inspections a day; the browser's small key store is only the fallback.
+   Only recent records are kept in memory (the last 7 days, or back to the oldest taglist still
+   loaded, at most 62 days); older shifts are read from the phone when the Hourly tab asks for them,
+   and everything comes out with "Download all records". */
+const KEEP_DAYS=7,MAX_DAYS=62;
+let loadedFrom=0,hourlyExtra=null;
+function loadWindow(tls){
+  const now=Date.now(),oldest=tls.reduce((m,t)=>Math.min(m,t.at||now),now);
+  return Math.max(now-MAX_DAYS*864e5,Math.min(now-KEEP_DAYS*864e5,oldest-864e5));
+}
+const dbRange=(a,z)=>idbTx('records','readonly',os=>os.index('ts').getAll(IDBKeyRange.bound(a,z,false,true)));
+const store={db:null,mode:'ls'};
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    if(!window.indexedDB) return rej(new Error('IndexedDB is not available'));
+    let rq;try{rq=indexedDB.open('line-check',1)}catch(e){return rej(e)}
+    rq.onupgradeneeded=()=>{
+      const d=rq.result;
+      if(!d.objectStoreNames.contains('records')){const s=d.createObjectStore('records',{keyPath:'id'});s.createIndex('ts','ts')}
+      if(!d.objectStoreNames.contains('taglists')) d.createObjectStore('taglists',{keyPath:'id'});
+    };
+    rq.onsuccess=()=>res(rq.result);
+    rq.onerror=()=>rej(rq.error||new Error('IndexedDB failed'));
+    rq.onblocked=()=>rej(new Error('IndexedDB blocked'));
+  });
+}
+function idbTx(name,mode,fn){
+  return new Promise((res,rej)=>{
+    let tx;try{tx=store.db.transaction(name,mode)}catch(e){return rej(e)}
+    const os=tx.objectStore(name);let out;
+    const r=fn(os);if(r) r.onsuccess=()=>{out=r.result};
+    tx.oncomplete=()=>res(out);
+    tx.onerror=()=>rej(tx.error||new Error('write failed'));
+    tx.onabort=()=>rej(tx.error||new Error('write aborted'));
+  });
+}
+const dbPut=(s,v)=>idbTx(s,'readwrite',os=>os.put(v));
+const dbPutMany=(s,list)=>idbTx(s,'readwrite',os=>{list.forEach(v=>os.put(v))});
+const dbDel=(s,k)=>idbTx(s,'readwrite',os=>os.delete(k));
+const dbAll=s=>idbTx(s,'readonly',os=>os.getAll());
+const dbSince=ts=>idbTx('records','readonly',os=>os.index('ts').getAll(IDBKeyRange.lowerBound(ts)));
+async function boot(){
+  main.innerHTML='<p class="hint" style="margin-top:20px">Loading…</p>';
+  try{
+    store.db=await idbOpen();store.mode='idb';
+    /* move what the earlier version kept in the small key store */
+    const oldR=safeParse(lsGet('lc2-records')),oldT=safeParse(lsGet('lc3-taglists'));
+    if(oldR&&oldR.length){await dbPutMany('records',oldR);lsDel('lc2-records')}
+    if(oldT&&oldT.length){await dbPutMany('taglists',oldT);lsDel('lc3-taglists')}
+    taglists=(await dbAll('taglists'))||[];
+    loadedFrom=loadWindow(taglists);
+    records=(await dbSince(loadedFrom))||[];
+  }catch(e){
+    store.db=null;store.mode='ls';
+    records=safeParse(lsGet('lc2-records'))||[];
+    taglists=safeParse(lsGet('lc3-taglists'))||[];
+  }
+  records.sort((a,b)=>b.ts-a.ts);taglists.sort((a,b)=>(b.at||0)-(a.at||0));
+  try{if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{})}catch(e){}
+  reindex();renderPill();render();startDb();
+}
+function renderPill(){
+  const el=$('#store');
+  const m={device:['Saved on this device',''],shared:['Device + shared copy','on'],error:['Shared copy not saving','bad']}[dbState]||['Saved on this device',''];
+  el.textContent=m[0];el.className='store'+(m[1]?' '+m[1]:'');
+}
+/* The inspector's device is the record of truth: every inspection is written here first.
+   A shared copy is only kept when the viewer is signed in and allowed to write. */
+function startDb(){
+  if(!(window.claude&&window.claude.use)) return;
+  window.claude.use('db').then(db=>{
+    if(!db) return;
+    shared=db;
+    db.collection('checks').orderBy('ts','desc').limit(1000).onSnapshot(snap=>{
+      const have={};records.forEach(r=>{have[r.id]=1});
+      const added=[];
+      snap.docs.forEach(d=>{const v=d.data();if(v&&v.id&&!have[v.id]){records.push(v);have[v.id]=1;added.push(v)}});
+      if(added.length){
+        records.sort((a,b)=>b.ts-a.ts);
+        if(store.mode==='idb') dbPutMany('records',added).catch(()=>{});else lsSet('lc2-records',JSON.stringify(records));
+        refreshData();
+      }
+      if(dbState==='device'){dbState='shared';renderPill()}
+    },()=>{shared=null;dbState='error';renderPill()});
+  }).catch(()=>{});
+}
+async function saveRecord(rec){
+  if(!records.some(r=>r.id===rec.id)) records.unshift(rec);
+  try{
+    if(store.mode==='idb') await dbPut('records',rec);
+    else if(!lsSet('lc2-records',JSON.stringify(records))) throw new Error('full');
+  }catch(e){
+    records=records.filter(r=>r.id!==rec.id);
+    throw new Error('This device has no room left, or its storage is blocked. Download all records from the Log tab, then free some space.');
+  }
+  if(shared){
+    try{await shared.collection('checks').doc(rec.id).set(rec)}
+    catch(e){shared=null;dbState='error';renderPill()}
+  }
+}
+async function putTaglists(list){
+  if(store.mode==='idb'){try{await dbPutMany('taglists',list);return true}catch(e){return false}}
+  return lsSet('lc3-taglists',JSON.stringify(taglists));
+}
+async function dropTaglist(id){
+  if(store.mode==='idb'){try{await dbDel('taglists',id)}catch(e){}}
+  else lsSet('lc3-taglists',JSON.stringify(taglists));
+}
+function refreshData(){
+  if(view==='hourly') renderHourly();
+  else if(view==='log') renderLog();
+  else if(view==='check'&&mode==='scan'){const r=$('#recent');if(r) r.innerHTML=recentHTML()}
+}
+
+function renderTabs(){
+  $('#tab-check').setAttribute('aria-current',view==='check'?'page':'false');
+  $('#tab-hourly').setAttribute('aria-current',view==='hourly'?'page':'false');
+  $('#tab-log').setAttribute('aria-current',view==='log'?'page':'false');
+  $('#tab-taglist').setAttribute('aria-current',(view==='taglist'||view==='doc')?'page':'false');
+  $('#tab-check').textContent=(view!=='check'&&mode==='run')?'Check (open)':'Check';
+}
+function render(){
+  if(cam.on&&!(view==='check'&&mode==='scan')) closeCamera();
+  renderTabs();
+  $('#bar').hidden=!(view==='check'&&mode==='run');
+  if(view==='hourly') renderHourly();
+  else if(view==='log') renderLog();
+  else if(view==='taglist') renderTaglist();
+  else if(view==='doc') renderDoc();
+  else if(mode==='run') renderRun();
+  else if(mode==='done') renderDone();
+  else renderScan();
+  window.scrollTo(0,0);
+}
+let toastT=null;
+function toast(m,bad){
+  const el=$('#toast');if(!el) return;
+  el.textContent=m;el.className='toast'+(bad?' bad':'');el.hidden=false;
+  try{navigator.vibrate&&navigator.vibrate(bad?[80,60,80]:40)}catch(e){}
+  clearTimeout(toastT);toastT=setTimeout(()=>{el.hidden=true},bad?3500:2200);
+}
+
+/* ---------- Scan ---------- */
+function recentHTML(){
+  if(!records.length) return '<div class="prow"><span class="hint">No inspections recorded yet.</span></div>';
+  return records.slice(0,6).map(r=>`<div class="prow"><span><span class="pill ${r.verdict==='PASS'?'pass':'fail'}">${r.verdict}</span> <strong class="mono">${esc(r.tag||r.code)}</strong> <span class="hint mono">${esc(r.code)}</span></span><span class="mono hint">${hhmm(r.ts)}</span></div>`).join('');
+}
+function renderScan(){
+  main.innerHTML=`
+  <h2>Final inspection</h2>
+  <form id="scanform" class="card form" autocomplete="off" novalidate>
+    <div class="field"><label for="f-code">Label code</label>
+      <div class="scanrow"><input id="f-code" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Scan or type the code">
+      <button type="button" class="btn" data-act="cam">Camera</button></div>
+      <span class="hint" id="scanmsg">A Bluetooth or ring scanner types the code and presses Enter, and the check starts on its own. Or tap Camera.</span></div>
+    <div class="camwrap" id="cam" hidden>
+      <video id="camv" playsinline muted></video><div class="camline" aria-hidden="true"></div>
+      <div class="actions" style="margin-top:0"><button type="button" class="btn ghost" data-act="cam-stop">Close camera</button></div>
+    </div>
+    <div class="field"><label for="f-inspector">Inspector</label><input id="f-inspector" value="${esc(inspector)}" placeholder="Your name"></div>
+    <p class="err" id="scan-err" role="alert" hidden></p>
+    <button class="btn primary" type="submit">Start check</button>
+  </form>
+  <h3 class="sub">Latest inspections</h3>
+  <div class="card list" id="recent">${recentHTML()}</div>
+  <h3 class="sub">Ring scanner</h3>
+  <div class="card form">
+    <p class="hint">Print the command cards and keep them at the station. With a check open, scan a card to confirm a group (Dimensions OK, Ends OK and so on), select all remaining pieces, submit, or discard. Scanning the next duct label after every item is answered submits the open check and starts the new one.</p>
+    <div class="actions" style="margin-top:0"><button type="button" class="btn" data-act="cards">Download command cards (PDF)</button></div>
+    <p class="hint" id="cards-msg" role="status"></p>
+  </div>`;
+  $('#f-code').focus();
+}
+function loadScript(src){
+  return new Promise((res,rej)=>{
+    const have=document.querySelector('script[data-src="'+src+'"]');
+    if(have){have.dataset.ok?res():have.addEventListener('load',()=>res());have.addEventListener('error',()=>rej(new Error('load')));return}
+    const el=document.createElement('script');el.src=src;el.dataset.src=src;
+    el.onload=()=>{el.dataset.ok='1';res()};el.onerror=()=>rej(new Error('load'));
+    document.head.appendChild(el);
+  });
+}
+/* Scanning: the camera reads the label and the check starts straight away. */
+let cam={on:false,stream:null,reader:null,timer:null};
+function camMsg(m){const el=$('#scanmsg');if(el) el.textContent=m}
+function closeCamera(){
+  cam.on=false;
+  if(cam.timer){clearTimeout(cam.timer);cam.timer=null}
+  if(cam.reader){try{cam.reader.reset()}catch(e){}cam.reader=null}
+  if(cam.stream){try{cam.stream.getTracks().forEach(t=>t.stop())}catch(e){}cam.stream=null}
+  const box=$('#cam');if(box) box.hidden=true;
+  const v=$('#camv');if(v) v.srcObject=null;
+}
+function onScanned(code){
+  if(!cam.on) return;
+  closeCamera();
+  const el=$('#f-code');if(el) el.value=code;
+  try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}
+  startRun(code);
+}
+async function openCamera(){
+  const err=$('#scan-err'),who=($('#f-inspector')||{}).value||'';
+  if(!who.trim()){err.textContent='Enter your name first.';err.hidden=false;return}
+  err.hidden=true;inspector=who.trim();lsSet('lc-inspector',inspector);
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    camMsg('This browser will not open a camera here. Use a Bluetooth scanner, or type the code and press Enter.');return;
+  }
+  camMsg('Opening the camera…');
+  try{
+    cam.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
+  }catch(e){
+    const n=(e&&e.name)||'';
+    camMsg(n==='NotAllowedError'
+      ? 'The camera is blocked for this page. Allow it in the browser, or use a Bluetooth scanner, or type the code and press Enter.'
+      : 'The camera could not be opened'+(n?' ('+n+')':'')+'. Use a Bluetooth scanner, or type the code and press Enter.');
+    return;
+  }
+  const box=$('#cam'),v=$('#camv');
+  box.hidden=false;v.srcObject=cam.stream;
+  try{await v.play()}catch(e){}
+  cam.on=true;
+  camMsg('Hold the label steady in the frame.');
+  if('BarcodeDetector' in window) nativeScan(v); else zxingScan(v);
+}
+async function nativeScan(v){
+  let det;
+  try{const f=await BarcodeDetector.getSupportedFormats();det=f&&f.length?new BarcodeDetector({formats:f}):new BarcodeDetector()}
+  catch(e){try{det=new BarcodeDetector()}catch(e2){return zxingScan(v)}}
+  const tick=async()=>{
+    if(!cam.on) return;
+    try{const r=await det.detect(v);if(r&&r.length&&r[0].rawValue) return onScanned(r[0].rawValue)}catch(e){}
+    cam.timer=setTimeout(tick,180);
+  };
+  tick();
+}
+async function zxingScan(v){
+  try{await loadScript('vendor/zxing.min.js')}
+  catch(e){closeCamera();camMsg('The barcode reader could not load. Connect to the internet once so it can be cached, or use a Bluetooth scanner.');return}
+  const Z=window.ZXing;
+  if(!Z||!Z.BrowserMultiFormatReader){closeCamera();camMsg('The barcode reader is unavailable. Use a Bluetooth scanner, or type the code.');return}
+  try{
+    cam.reader=new Z.BrowserMultiFormatReader();
+    cam.reader.decodeFromVideoElement(v,(result)=>{if(result&&result.getText()) onScanned(result.getText())});
+  }catch(e){closeCamera();camMsg('The barcode reader could not start. Use a Bluetooth scanner, or type the code.')}
+}
+
+/* ---------- Starting a check ---------- */
+function doneUnits(units){
+  const d={},cache={};
+  units.forEach(u=>{const l=cache[u.k]||(cache[u.k]=donePieces(records,u.k));if(l.indexOf(u.n)>=0) d[u.uid]=1});
+  return d;
+}
+function startRun(code){
+  const err=$('#scan-err'),who=(($('#f-inspector')||{}).value||inspector||'').trim();
+  const fail=m=>{if(err&&mode==='scan'&&view==='check'){err.textContent=m;err.hidden=false}else toast(m,true)};
+  code=String(code||'').trim();
+  if(!code) return fail('Scan or type the label code.');
+  if(parseCommand(code)) return fail('That is a command card. Scan a duct label first.');
+  if(!who) return fail('Enter your name.');
+  inspector=who;lsSet('lc-inspector',who);
+  const hit=lookupKey(tlIndex,code);
+  const asm=hit?(asmIndex[hit.entry.k]||null):null;
+  const units=hit?unitsFor(hit.entry,asm):[{uid:normKey(code)+'#1',k:normKey(code),n:1,q:1,e:null,tag:code}];
+  const parts=asm?asm.members.map(e=>({tag:e.tag,e,app:pieceRules(e,rules)}))
+    :[{tag:hit?hit.entry.tag:code,e:hit?hit.entry:null,app:pieceRules(hit?hit.entry:null,rules)}];
+  const app=mergeRules(parts);
+  const done=doneUnits(units),left=units.filter(u=>!done[u.uid]);
+  /* an assembly is inspected in one go; pieces on one barcode one at a time unless "apply to all" is tapped */
+  const sel=asm?(left.length?left:units).map(u=>u.uid):[(left[0]||units[0]).uid];
+  run={code,inspector:who,answers:presetAnswers(app),hit,asm,units,parts,app,sel,open:{}};
+  view='check';mode='run';render();
+}
+
+/* ---------- Run: one card per group ---------- */
+function itemRow(it,open){
+  const r=run.app&&run.app[it.id],a=run.answers[it.id]||{},ok=answered(it,run.app,a),o=ok?a.r:'open';
+  const off=!!(r&&!r.on),decide=!!(r&&r.on&&r.unknown);
+  const showBtns=!off&&(open||decide||o==='fail');
+  const na=naOk(it,run.app);
+  const why=r&&r.why&&!(it.g==='lin'&&r.on&&!r.unknown)?r.why:'';
+  return `<div class="irow${off?' off':''}" data-id="${it.id}" data-state="${o}">
+    <div class="itxt"><span class="ilabel">${esc(it.label)}</span>${why?`<span class="rule${decide?' req':''}">${decide?'Decide: ':''}${esc(why)}</span>`:''}</div>
+    <span class="imark ${o}">${{open:'',pass:'✓',fail:'✗',na:'N/A'}[o]}</span>
+    ${showBtns?`<div class="seg mini${na?' tri':''}" role="group" aria-label="Result for ${esc(it.label)}">
+      <button type="button" class="opt pass" data-act="pass" aria-pressed="${o==='pass'}">Pass</button>
+      <button type="button" class="opt fail" data-act="fail" aria-pressed="${o==='fail'}">Fail</button>
+      ${na?`<button type="button" class="opt na" data-act="na" aria-pressed="${o==='na'}">N/A</button>`:''}</div>`:''}
+    ${o==='fail'?`<div class="detail"><label class="dlabel" for="nt-${it.id}">Note (optional)</label><textarea id="nt-${it.id}" data-note rows="2" placeholder="What is wrong?">${esc(a.note||'')}</textarea></div>`:''}
+  </div>`;
+}
+function groupHTML(gid){
+  const its=FINAL.filter(i=>i.g===gid),app=run.app||{};
+  const applicable=its.filter(it=>!(app[it.id]&&!app[it.id].on));
+  if(!applicable.length){
+    const why=(app[its[0].id]||{}).why||'Not needed on this piece.';
+    return `<section class="card grp" data-g="${gid}" data-state="na"><div class="chead"><h3>${esc(groupName(gid))}</h3><span class="pill na">N/A</span></div><p class="rule">${esc(why)}</p></section>`;
+  }
+  const st=groupState(gid,run.app,run.answers),open=!!run.open[gid];
+  const needs=applicable.filter(it=>app[it.id]&&app[it.id].unknown&&!answered(it,run.app,run.answers[it.id])).length;
+  return `<section class="card grp" data-g="${gid}" data-state="${st}">
+    <div class="chead"><h3>${esc(groupName(gid))}</h3><span class="pill ${st==='open'?'':st}">${{open:'Open',pass:'OK',fail:'Defect',na:'N/A'}[st]}</span></div>
+    <div class="items">${its.map(it=>itemRow(it,open)).join('')}</div>
+    ${needs?`<p class="rule req" style="margin-top:8px">${needs===1?'1 item needs':needs+' items need'} your own answer above.</p>`:''}
+    <div class="seg">
+      <button type="button" class="opt pass" data-act="gok" data-g="${gid}" aria-pressed="${st==='pass'}">${esc(groupName(gid))} OK</button>
+      <button type="button" class="opt fail" data-act="gdef" data-g="${gid}" aria-pressed="${open||st==='fail'}">Defect</button>
+    </div></section>`;
+}
+function refreshGroup(gid){
+  const el=main.querySelector('section.grp[data-g="'+gid+'"]');
+  if(el) el.outerHTML=groupHTML(gid);
+  refreshBar();
+}
+function infoHTML(){
+  if(!run.hit) return taglists.length?'<p class="banner">Not found in the loaded taglists. You can still inspect it, but no area is counted and every conditional item is yours to decide.</p>'
+    :'<p class="hint" style="margin-top:6px">No taglist loaded, so no area. Upload one in the Taglist tab.</p>';
+  const e=run.hit.entry,ln=linerOf(e),out=[];
+  out.push('<p class="meta">'+esc([e.desc,e.tl].filter(Boolean).join(' · '))+'</p>');
+  const chips=[];
+  if(e.pp!=null) chips.push(e.pp.toFixed(2)+' m²'+(e.q>1?' each':''));
+  chips.push(ln===true?'Lined':ln===false?'No liner':'Liner not stated');
+  const l=endInfo(e.ls),s=endInfo(e.ss);
+  if(l) chips.push('LS: '+l.t);if(s) chips.push('SS: '+s.t);
+  out.push('<div class="chips">'+chips.map(c=>'<span class="pill">'+esc(c)+'</span>').join('')+'</div>');
+  if(run.parts.some(p=>isAps(p.e))) out.push('<p class="banner aps"><strong>APS: as per sketch.</strong> Check the sizes and the taper on the sketch; tie rods, clips and vanes below are worked out from the taglist sizes.</p>');
+  if(run.asm) out.push('<p class="banner">Joined parts of one duct: '+esc(run.asm.members.map(m=>m.tag+(m.q>1?' ×'+m.q:'')).join(', '))+'. Inspect them together once they are assembled. One inspection is recorded against every part.</p>');
+  if(run.hit.n>1) out.push('<p class="hint">This number appears '+run.hit.n+' times in the loaded taglists. Showing the newest.</p>');
+  if(e.a==null) out.push('<p class="hint">This taglist row has no readable area.</p>');
+  if(!('ls' in e)) out.push('<p class="banner">This taglist was loaded with the earlier version, so ends and liner are not read from it. Remove it in the Taglist tab and load it again.</p>');
+  return out.join('');
+}
+function piecesHTML(){
+  const us=run.units;
+  if(us.length<2) return run.hit&&donePieces(records,us[0].k).length?'<p class="hint" style="margin-top:6px">Already inspected once. This records a re-inspection.</p>':'';
+  const done=doneUnits(us),left=us.filter(u=>!done[u.uid]);
+  const btns=us.map(u=>`<button type="button" class="opt pc${done[u.uid]?' done':''}" data-act="pick" data-u="${esc(u.uid)}" aria-pressed="${run.sel.indexOf(u.uid)>=0}">${esc(u.tag)}${done[u.uid]?' ✓':''}</button>`).join('');
+  const allSel=left.length>1&&left.every(u=>run.sel.indexOf(u.uid)>=0);
+  const waiting=run.asm?left.filter(u=>run.sel.indexOf(u.uid)<0):[];
+  const pp=run.hit.entry.pp;
+  return `<span class="dlabel">${run.asm?'Parts in this assembly':'Which piece are you checking?'}</span>
+    <div class="pieces" role="group" aria-label="Pieces">${btns}</div>
+    ${left.length>1&&!allSel?`<div class="actions" style="margin-top:8px"><button type="button" class="btn ghost" data-act="pick-rest">Apply to all ${left.length} not yet inspected</button></div>`:''}
+    ${waiting.length?`<p class="banner">Waiting for ${esc(waiting.map(u=>u.tag).join(', '))}. Inspect the assembly when every part is there.</p>`:''}
+    <p class="hint" style="margin-top:8px">${run.asm?'Each selected part gets its own record with this result.'
+      :us.length+' pieces share this barcode'+(pp!=null?', '+pp.toFixed(2)+' m² each':'')+'. Each selected piece gets its own record, so inspect a piece on its own when its result differs.'}</p>`;
+}
+function renderRun(){
+  const keys=run.units.map(u=>u.k);
+  const prior=records.filter(r=>keys.indexOf(normKey(r.code))>=0).slice(0,4);
+  const title=run.asm?run.asm.base+' assembly':(run.hit?run.hit.entry.tag:run.code);
+  main.innerHTML=`
+  <div class="card runhead">
+    <p class="eyebrow">${run.asm?'Joined assembly':'Final inspection'}</p>
+    <h2 class="mono" style="margin:4px 0 0;overflow-wrap:anywhere">${esc(title)}</h2>
+    <p class="meta mono">${esc(run.code)} · ${esc(run.inspector)}</p>
+    ${infoHTML()}
+    <div class="pcbox" id="pcbox"${run.units.length<2&&!piecesHTML()?' hidden':''}>${piecesHTML()}</div>
+    ${prior.length?`<div class="chips">${prior.map(r=>`<span class="pill ${r.verdict==='PASS'?'pass':'fail'}">${esc(r.tag||r.code)} · ${r.verdict} · ${esc(fmtTime(r.ts))}</span>`).join('')}</div>`:''}
+    <div class="prog" aria-hidden="true"><i id="prog-fill"></i></div>
+    <p class="meta" id="prog-n"></p>
+  </div>
+  <div class="stack" style="margin-top:12px">${GROUPS.map(g=>groupHTML(g[0])).join('')}</div>`;
+  refreshBar();
+}
+function refreshBar(){
+  if(!run) return;
+  const open=openCount(run.app,run.answers);
+  const appl=GROUPS.filter(g=>groupState(g[0],run.app,run.answers)!=='na');
+  const gdone=appl.filter(g=>groupState(g[0],run.app,run.answers)!=='open').length;
+  const fails=FINAL.filter(it=>(run.answers[it.id]||{}).r==='fail').length;
+  const fill=$('#prog-fill');if(fill) fill.style.width=(appl.length?gdone/appl.length*100:100)+'%';
+  const pn=$('#prog-n');if(pn) pn.textContent=gdone+' of '+appl.length+' groups confirmed';
+  const sel=run.sel.length,msg=$('#bar-msg');
+  msg.textContent=open?open+(open===1?' item':' items')+' still open'
+    :!sel?'Choose which piece you are checking.'
+    :(fails?fails+(fails===1?' defect':' defects')+'. This records a FAIL for '+sel+(sel===1?' piece.':' pieces.'):'All groups OK'+(sel>1?' for '+sel+' pieces.':'.'));
+  const b=$('#btn-submit');
+  b.disabled=open>0||!sel;
+  b.textContent=open||!fails?(sel>1?'Submit '+sel+' pieces':'Submit'):'Submit fail';
+}
+async function submitRun(){
+  if(!run||openCount(run.app,run.answers)>0||!run.sel.length) return false;
+  const r0=run;run=null;saveErr=null;lastBatch=[];lastCode=r0.code;
+  for(const uid of r0.sel){
+    const u=r0.units.find(x=>x.uid===uid);if(!u) continue;
+    const e=u.e,ts=Date.now();
+    let app=r0.app,ans=r0.answers;
+    if(r0.asm){
+      const part=r0.parts.find(p=>p.e&&e&&p.e.k===e.k);
+      if(part){
+        app=Object.assign({},r0.app);
+        for(const id in part.app){
+          if(!part.app[id].on) app[id]=part.app[id];
+          else if(part.app[id].code) app[id]=Object.assign({},app[id],{code:part.app[id].code});
+        }
+        ans=answersForPart(r0.answers,part.app);
+      }
+    }
+    const rec=buildRecord('final',e?(e.raw||e.k):r0.code,ans,ts,'C'+ts.toString(36)+Math.random().toString(36).slice(2,6)+u.n,r0.inspector,
+      e?{tag:e.tag,taglist:e.tl,desc:e.desc,qty:e.q,pieceNo:u.n,perPiece:e.pp,liner:linerOf(e),asm:r0.asm?r0.asm.base:'',app}:{pieceNo:1,app});
+    try{await saveRecord(rec);lastBatch.push(rec)}
+    catch(err){saveErr=(err&&err.message)||'The record could not be saved.';break}
+  }
+  lastRec=lastBatch[0]||null;
+  mode='done';render();
+  return true;
+}
+
+/* ---------- Done ---------- */
+function remainingFor(code){
+  const hit=lookupKey(tlIndex,code);if(!hit) return [];
+  const asm=asmIndex[hit.entry.k]||null,units=unitsFor(hit.entry,asm),d=doneUnits(units);
+  return units.filter(u=>!d[u.uid]);
+}
+function renderDone(){
+  const r=lastRec;
+  if(!r){mode='scan';renderScan();return}
+  const failed=r.items.filter(i=>i.r==='fail');
+  const left=remainingFor(lastCode);
+  const where=shared?'this device, with a shared copy':'this device';
+  main.innerHTML=`
+  <h2>Inspection recorded</h2>
+  <section class="card verdictcard ${r.verdict.toLowerCase()}">
+    <p class="eyebrow">${r.asm?'Joined assembly '+esc(r.asm):'Final inspection'}</p>
+    <p class="verdict">${r.verdict}</p>
+    <p class="mono" style="overflow-wrap:anywhere">${esc(lastBatch.map(x=>x.tag).join(', '))||esc(r.code)} · ${hhmm(r.ts)} · ${esc(r.inspector)}</p>
+    ${recInfo(r)}${lastBatch.length>1?`<p class="hint">${lastBatch.length} pieces recorded with the same result.</p>`:''}
+    ${failed.length?failed.map(i=>`<div class="fitem"><strong>${esc(labelOf(i.id,i.label))}</strong>${i.note?'<br>'+esc(i.note):''}</div>`).join(''):'<p>All groups OK.</p>'}
+    ${saveErr?`<p class="banner" role="alert">Not saved: ${esc(saveErr)}</p><div><button type="button" class="btn" data-act="retry">Try saving again</button></div>`:`<p class="hint">Saved to ${where}.</p>`}
+    ${!saveErr&&dbState==='error'?'<p class="hint">The shared copy is not saving, so this record is on this device only.</p>':''}
+  </section>
+  <div class="actions">${left.length?`<button type="button" class="btn primary" data-act="nextpiece">${r.asm?'Inspect the remaining parts':'Next piece on this label'} (${left.length} left)</button>`:''}
+    <button type="button" class="btn${left.length?'':' primary'}" data-act="next">Scan next label</button></div>
+  <p class="hint" style="margin-top:10px">With a scanner, just scan the next label.</p>`;
+}
+
+/* ---------- Scanner input outside a text box: labels and command cards ---------- */
+let kb={buf:'',t:0};
+document.addEventListener('keydown',e=>{
+  const tg=e.target,typing=tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA'||tg.tagName==='SELECT'||tg.isContentEditable);
+  if(typing||view!=='check'||e.ctrlKey||e.metaKey||e.altKey) return;
+  const now=Date.now();
+  if(now-kb.t>150) kb.buf='';
+  kb.t=now;
+  if(e.key==='Enter'){const c=kb.buf.trim();kb.buf='';if(c.length>=3){e.preventDefault();handleScan(c)}return}
+  if(e.key&&e.key.length===1) kb.buf+=e.key;
+});
+async function handleScan(code){
+  const cmd=parseCommand(code);
+  if(cmd){
+    if(mode!=='run'||!run){toast('Scan a duct label first.',true);return}
+    if(cmd[2]==='gok'){
+      if(groupState(cmd[3],run.app,run.answers)==='na'){toast(groupName(cmd[3])+': not needed on this piece.');return}
+      run.answers=groupOk(cmd[3],run.app,run.answers);run.open[cmd[3]]=false;refreshGroup(cmd[3]);
+      const st=groupState(cmd[3],run.app,run.answers);
+      toast(st==='open'?groupName(cmd[3])+': an item still needs your answer.':cmd[1],st==='open');
+    }else if(cmd[2]==='all'){
+      const d=doneUnits(run.units),left=run.units.filter(u=>!d[u.uid]);
+      if(left.length) run.sel=left.map(u=>u.uid);
+      const box=$('#pcbox');if(box) box.innerHTML=piecesHTML();refreshBar();
+      toast(run.sel.length+(run.sel.length===1?' piece':' pieces')+' selected');
+    }else if(cmd[2]==='submit'){
+      const n=openCount(run.app,run.answers);
+      if(n||!run.sel.length){toast(n?'Not submitted: '+n+(n===1?' item':' items')+' still open.':'Choose a piece first.',true);return}
+      await submitRun();toast('Submitted.');
+    }else if(cmd[2]==='discard'){run=null;mode='scan';render();toast('Check discarded.')}
+    return;
+  }
+  if(mode==='run'&&run){
+    if(run.units.some(u=>u.k===normKey(code))){toast('This label is already open.');return}
+    const n=openCount(run.app,run.answers);
+    if(!n&&run.sel.length){await submitRun();startRun(code);toast('Previous check submitted.')}
+    else toast('Finish this check first: '+(n?n+(n===1?' item':' items')+' open':'choose a piece')+'. Or scan Discard.',true);
+    return;
+  }
+  startRun(code);
+}
+/* Command cards: Code 128 barcodes drawn into a PDF to print and laminate */
+async function commandCardsPdf(){
+  try{await loadScript(JSPDF_URL)}catch(e){return 'The PDF builder could not load. Connect to the internet once.'}
+  const JS=window.jspdf&&window.jspdf.jsPDF;
+  if(!JS) return 'The PDF builder did not start.';
+  const doc=new JS({orientation:'portrait',unit:'mm',format:'a4'});
+  const M=12,G=8,cw=(210-2*M-G)/2,ch=58;
+  doc.setFont('helvetica','bold');doc.setFontSize(12);
+  doc.text('Line Check — command cards for the ring scanner',M,10);
+  COMMANDS.forEach((c,i)=>{
+    const x=M+(i%2)*(cw+G),y=16+Math.floor(i/2)*(ch+G);
+    doc.setDrawColor(150,150,150);doc.setLineWidth(0.3);doc.rect(x,y,cw,ch);
+    doc.setFont('helvetica','bold');doc.setFontSize(15);doc.setTextColor(20,30,40);
+    doc.text(c[1],x+cw/2,y+11,{align:'center'});
+    const mods=code128(c[0]),total=mods.reduce((a,b)=>a+b,0)+20,mw=Math.min(0.5,(cw-6)/total);
+    let bx=x+(cw-total*mw)/2+10*mw;
+    doc.setFillColor(0,0,0);
+    mods.forEach((w,j)=>{if(j%2===0) doc.rect(bx,y+17,w*mw,26,'F');bx+=w*mw});
+    doc.setFont('courier','normal');doc.setFontSize(9);
+    doc.text(c[0],x+cw/2,y+49,{align:'center'});
+  });
+  return saveOut('line-check-command-cards.pdf',doc.output('arraybuffer'));
+}
+
+/* ---------- Hourly ---------- */
+function hourlyCtx(){
+  const s=source();
+  const si=s.real?shiftInfo(Date.now()):shiftInfo(EXAMPLES[0].ts);
+  const date=hsel.date||si.date,shift=hsel.shift||si.shift;
+  const list=(hourlyExtra&&hourlyExtra.date===date)?hourlyExtra.list:s.list;
+  return {s,date,shift,stageLabel:'final inspection',b:hourBuckets(list,date,shift,'all',s.real?Date.now():null)};
+}
+function renderHourly(){
+  const {s,date,shift,b}=hourlyCtx(),t=b.totals;
+  const max=Math.max(1,...b.rows.map(r=>r.defects));
+  const rows=b.rows.map(r=>{
+    const meta=r.future?'Not started yet'
+      :r.pieces+(r.pieces===1?' piece':' pieces')+' checked'+(r.piecesFailed?', '+r.piecesFailed+' failed':'')+(r.passedArea>0?' · '+m2(r.passedArea)+' m² passed ('+m2(r.linerArea)+' lined)':'')
+        +(r.defects&&r.top.length?'<br>Most frequent: '+esc(r.top[0][0])+(r.top[0][1]>1?' ×'+r.top[0][1]:''):'');
+    return `<div class="hrow${r.defects?'':' zero'}${r.future?' future':''}"><span class="hlabel">${hourLabel(r.hour)}</span>
+      <div class="hbar" aria-hidden="true"><i style="width:${r.defects/max*100}%"></i></div>
+      <span class="hnum">${r.future?'–':r.defects}<span class="sr"> defects</span></span><p class="hmeta">${meta}</p></div>`;
+  }).join('');
+  main.innerHTML=`
+  <h2>Defects by hour</h2>
+  ${s.real?'':'<p class="banner">These are example records from a past day shift. Submit an inspection and your own records replace them.</p>'}
+  <div class="card filters">
+    <div class="field"><label for="h-date">Production date</label><input id="h-date" type="date" value="${esc(date)}"></div>
+    <div class="field"><label for="h-shift">Shift</label><select id="h-shift"><option${shift==='Day'?' selected':''}>Day</option><option${shift==='Night'?' selected':''}>Night</option></select></div>
+  </div>
+  <div class="stats stats4">
+    <div class="card stat"><div class="n">${t.defects}</div><div class="t">Defects</div></div>
+    <div class="card stat"><div class="n">${t.pieces}</div><div class="t">Pieces checked (${t.piecesFailed} failed)</div></div>
+    <div class="card stat"><div class="n">${m2(t.passedArea)}</div><div class="t">m² passed</div></div>
+    <div class="card stat"><div class="n">${m2(t.linerArea)}</div><div class="t">m² lined, passed</div></div>
+  </div>
+  <div class="card hours">${rows}</div>
+  <p class="hint" style="margin-top:8px">Day shift is 07:00 to 19:00. Night shift is 19:00 to 07:00 and counts under the date it started. A defect is a failed item, counted in the hour the inspection was submitted. Passed m² is the internal area of pieces that passed; lined m² is the part of it with acoustic liner. Older shifts are read from this device when you pick their date; every record is in "Download all records" on the Log tab.${t.unknown?' '+t.unknown+(t.unknown===1?' inspection has':' inspections have')+' no area because the label was not found in a taglist.':''}</p>
+  <h3 class="sub">Defect codes this shift</h3>
+  <div class="card list">${CODES.map(c=>`<div class="prow"><span><strong class="mono">${c[0]}</strong> <span class="hint">${esc(c[1])}</span></span><span class="mono">${t.codes[c[0]]||0}</span></div>`).join('')}</div>
+  <h3 class="sub">Most frequent defects</h3>
+  <div class="card list">${t.defects?b.top.map(x=>`<div class="prow"><span>${esc(x[0])}</span><span class="mono">${x[1]}</span></div>`).join(''):'<div class="prow"><span class="hint">No defects in this shift.</span></div>'}</div>
+  <div class="actions"><button type="button" class="btn primary" data-act="hour-dl">Download hourly checklist</button><button type="button" class="btn" data-act="copyhour">Copy hourly report</button></div>
+  <p class="hint" id="dl-msg" role="status" style="margin-top:8px"></p>`;
+}
+
+/* ---------- Log ---------- */
+function renderLog(){
+  const {real,list}=source();
+  const shown=list.filter(r=>!logFailedOnly||r.verdict==='FAIL').slice(0,200);
+  main.innerHTML=`
+  <h2>Log</h2>
+  ${real?'':'<p class="banner">These are example records. Submit an inspection and your own records replace them.</p>'}
+  <label class="check" for="l-failed"><input type="checkbox" id="l-failed"${logFailedOnly?' checked':''}>Show failed inspections only</label>
+  <div class="stack" style="margin-top:8px">${shown.length?shown.map(r=>`<details class="rec"><summary>
+    <span class="pill ${r.verdict==='PASS'?'pass':'fail'}">${r.verdict}</span>
+    <span class="grow"><strong class="mono" style="overflow-wrap:anywhere">${esc(r.tag||r.code)}</strong><br><span class="when">${esc(r.code)} · ${esc(r.inspector)}${r.asm?' · assembly '+esc(r.asm):''}</span></span>
+    <span class="when">${esc(fmtTime(r.ts))}</span></summary>
+    <div class="body">${recInfo(r)}${r.items.map(i=>`<div class="prow" style="padding:6px 0"><span>${esc(labelOf(i.id,i.label))}${i.note?'<br><span class="hint">'+esc(i.note)+'</span>':''}</span><span class="pill ${i.r==='pass'?'pass':i.r==='fail'?'fail':'na'}">${i.r==='pass'?'Pass':i.r==='fail'?'Fail':i.r==='na'?'N/A':'Open'}</span></div>`).join('')}</div></details>`).join(''):'<div class="card"><p class="hint">Nothing to show.</p></div>'}</div>
+  <div class="actions"><button type="button" class="btn primary" data-act="allcsv">Download all records (CSV)</button><button type="button" class="btn" data-act="copycsv">Copy records as CSV</button></div>
+  <p class="hint" id="dl-msg" role="status" style="margin-top:8px">There is no server copy yet. Download all records at the end of each shift and keep the file.</p>`;
+}
+
+/* ---------- Taglist ---------- */
+function recInfo(r){
+  const bits=[r.tag,r.taglist].filter(Boolean).map(esc);
+  if(typeof r.area==='number') bits.push(r.area.toFixed(2)+' m²'+(r.liner===true?' lined':''));
+  return bits.length?'<p class="hint mono">'+bits.join(' · ')+'</p>':'';
+}
+function recomputeImp(){
+  imp.headers=(imp.all[imp.hdr-1]||[]).map(x=>String(x));
+  imp.data=imp.all.slice(imp.hdr);
+  imp.map=guessMap(imp.headers);
+}
+function importerHTML(){
+  const i=imp,h=i.headers;
+  const opts=(sel,req)=>`<option value="-1"${sel<0?' selected':''}>${req?'Choose a column':'None'}</option>`+h.map((x,j)=>`<option value="${j}"${sel===j?' selected':''}>${esc(String(x).trim()||'(blank column '+(j+1)+')')}</option>`).join('');
+  const sel=(id,label,req)=>`<div class="field"><label for="tl-map-${id}">${label}</label><select id="tl-map-${id}">${opts(i.map[id],req)}</select></div>`;
+  const ready=i.map.key>=0&&i.map.area>=0;
+  const ac=areaCols(h);
+  const ent=ready?makeEntries(i.data,i.map):null;
+  const groups=ent?splitByTaglist(ent.rows,i.name||i.fileName):[];
+  const area=ent?ent.rows.reduce((n,e)=>n+(e.a||0),0):0;
+  const pv=i.data.slice(0,4);
+  const missing=[['ls','LS side'],['ss','SS side'],['liner','Liner / Clad'],['rem','Remarks']].filter(x=>i.map[x[0]]<0).map(x=>x[1]);
+  return `<h3 class="sub">Check the columns</h3>
+  <div class="card form">
+    ${i.map.tl>=0?'':`<div class="field"><label for="tl-name">Name for this taglist</label><input id="tl-name" value="${esc(i.name)}"></div>`}
+    <div class="field"><label for="tl-project">Project name (optional)</label><input id="tl-project" value="${esc(i.project||'')}" placeholder="Shown on the checklist"></div>
+    <div class="field"><label for="tl-hdr">Header row number</label><input id="tl-hdr" type="number" min="1" max="${Math.min(20,i.all.length-1)}" value="${i.hdr}"></div>
+    <div class="maps">${sel('key','Barcode number column',true)}${sel('area','Area (m²) column',true)}${sel('qty','Quantity column',false)}${sel('tag','Tag column',false)}${sel('tl','Taglist column',false)}${sel('desc','Part name column',false)}${sel('w','Width column',false)}${sel('d','Depth column',false)}${sel('w2','Width 2 column',false)}${sel('d2','Depth 2 column',false)}${sel('len','Length column',false)}${sel('ext','Extension column',false)}${sel('ec','End cap count column',false)}${sel('ls','LS side column',false)}${sel('ss','SS side column',false)}${sel('liner','Liner / Clad column',false)}${sel('rem','Remarks column',false)}</div>
+    ${(i.map.w<0||i.map.d<0)?'<p class="banner">No width or depth column chosen. Tie rods and vanes cannot be decided from the standard, so the inspector will decide them on every piece.</p>':''}
+    ${missing.length?'<p class="banner">No column chosen for: '+esc(missing.join(', '))+'. The checks that depend on them become the inspector’s decision on every piece.</p>':''}
+    ${ac.length>1?`<p class="banner">This file has ${ac.length} area columns: ${ac.map(c=>esc(c[1])+' ('+colTotal(i.data,c[0]).toFixed(1)+' m²)').join(', ')}. It is using <strong>${esc(h[i.map.area]||'none')}</strong>. Pick the one your production counts.</p>`:''}
+    ${i.map.qty<0?'<p class="banner">No quantity column chosen. Every row counts as one piece, so rows that cover several pieces will report too little area.</p>':''}
+    <div class="tablewrap"><table><thead><tr>${h.map(x=>`<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${pv.map(r=>`<tr>${h.map((x,j)=>`<td>${esc(r[j])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <p class="hint">${ready?`${groups.length} taglist${groups.length===1?'':'s'} in this file: ${groups.map(g=>esc(g.name)+' ('+g.pieces+' pieces)').join(', ')}. ${ent.rows.length} rows, ${ent.pieces} pieces, ${area.toFixed(1)} m² in total.${ent.noArea?' '+ent.noArea+' rows have no readable area.':''}${ent.noQty?' '+ent.noQty+' rows have no readable quantity and count as one piece.':''}${ent.skipped?' '+ent.skipped+' skipped for having no number.':''}${ent.adjust?' '+ent.adjust+' PO adjustment '+(ent.adjust===1?'row':'rows')+' left out.':''}${ent.dups?' '+ent.dups+' numbers repeat, so a scan can only show the newest.':''}`:'Choose the barcode number and area columns.'}</p>
+    ${ready&&ent.sci?`<p class="err">${ent.sci} barcode numbers look shortened by Excel (like 1.2E+11). Format that column as Text in Excel and upload again, or lookups will not match.</p>`:''}
+    <div class="actions" style="margin-top:0"><button type="button" class="btn primary" data-act="tl-import"${ready&&ent.rows.length?'':' disabled'}>Load ${groups.length>1?'these '+groups.length+' taglists':'this taglist'}</button><button type="button" class="btn" data-act="tl-cancel">Cancel</button></div>
+  </div>`;
+}
+function renderTaglist(){
+  main.innerHTML=`
+  <h2>Taglist</h2>
+  <div class="card form">
+    <div class="field"><label for="tl-file">Upload a taglist or the daily planning file (CSV or Excel)</label><input id="tl-file" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls"></div>
+    <p class="hint">A file with several taglists is split by its taglist column, and each taglist gets its own checklist. Loading a taglist that is already here replaces it; inspections already recorded are kept. Taglists stay on this device. Excel files use the first sheet.</p>
+    ${tlMsg?`<p class="${tlMsg.t==='ok'?'hint':'err'}" role="status">${esc(tlMsg.m)}</p>`:''}
+  </div>
+  ${imp?importerHTML():''}
+  <h3 class="sub">Loaded taglists</h3>
+  <div class="stack">${taglists.length?taglists.map(t=>{
+    const pcs=t.pieces||t.rows.reduce((n,e)=>n+(e.q>=1?e.q:1),0);
+    const pr=taglistProgress(t,records),old=t.rows.length&&!('ls' in t.rows[0]);
+    return `<section class="card"><div class="chead"><div style="min-width:0"><h3 style="overflow-wrap:anywhere">${esc(t.name)}</h3><p class="hint">${esc(fmtTime(t.at))} · ${t.rows.length} rows · ${pcs} pieces · ${pr.totalArea.toFixed(1)} m²${t.areaCol?' · area from '+esc(t.areaCol):''}</p></div>
+      <button type="button" class="btn ghost" data-act="tl-remove" data-tl="${esc(t.id)}">Remove</button></div>
+      ${old?'<p class="banner">Loaded with the earlier version: ends, liner and joined parts are not read. Remove it and load the file again.</p>':''}
+      <div class="prog" aria-hidden="true"><i style="width:${pct(pr.covered,pr.pieces)}%"></i></div>
+      <p class="hint" style="margin-top:6px">${pr.covered} of ${pr.pieces} pieces inspected${pr.covered?' · approved '+pr.counts.A+', reworked '+pr.counts.RWK+', rejected '+pr.counts.R:''}<br>${m2(pr.passedArea)} m² passed, ${m2(pr.linerArea)} m² of it lined</p>
+      ${pr.complete?'<p class="pill pass" style="display:inline-block;margin-top:8px">Taglist complete</p>':''}
+      <div class="actions" style="margin-top:12px"><button type="button" class="btn${pr.complete?' primary':''}" data-act="doc" data-tl="${esc(t.id)}">${pr.complete?'Generate checklist':'Open checklist so far'}</button></div></section>`;
+  }).join(''):'<div class="card"><p class="hint">No taglist loaded yet.</p></div>'}</div>
+  ${taglists.length?`<h3 class="sub">Try a number</h3><div class="card form"><div class="field"><label for="tl-try">Barcode number</label><input id="tl-try" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Type or scan a number"></div><p id="tl-try-out" class="hint">Shows what the number matches, so you can check the columns before the shift.</p></div>`:''}
+  <h3 class="sub">Rules for conditional items</h3>
+  <div class="card form">
+    <p class="hint">Orientation is checked only on M/C, Offset and Reducer pieces; neck on M/C pieces and Linear PLM.Box necks. Ends come from the LS / SS columns and liner items from the Liner / Clad column. Tie rods follow SMACNA Table 5-4 and tiger clips the SMACNA panel fastener table, both at the pressure chosen here. Vanes only in bends over 45°.</p>
+    <div class="rules">
+      <div class="field"><label for="rl-press">Static pressure class (SMACNA tables)</label><select id="rl-press">
+        ${PRESSURES.map(v=>`<option value="${v}"${!rules.posOnly&&pressureCol(rules)===PRESSURES.indexOf(v)?' selected':''}>Up to ${v} Pa, positive or negative</option>`).join('')}
+        <option value="pos"${rules.posOnly?' selected':''}>1000 Pa, positive only</option></select></div>
+      <div class="field"><label for="rl-rodMinLen">No tie rods on pieces shorter than (mm)</label><input id="rl-rodMinLen" inputmode="numeric" value="${esc(rules.rodMinLen)}"></div>
+      <div class="field"><label for="rl-clipMinLen">Tiger clips on pieces longer than (mm)</label><input id="rl-clipMinLen" inputmode="numeric" value="${esc(rules.clipMinLen)}"></div>
+      <div class="field"><label for="rl-clipSide">... and with a side over (mm)</label><input id="rl-clipSide" inputmode="numeric" value="${esc(rules.clipSide)}"></div>
+      <div class="field"><label for="rl-vaneAngle">Vanes only in bends over (degrees)</label><input id="rl-vaneAngle" inputmode="decimal" value="${esc(rules.vaneAngle)}"></div>
+    </div>
+    <p class="hint">Set to your practice: pressure up to 500 Pa, no tie rods under 300 mm long, tiger clips only on pieces over 1000 mm long with a side over 500 mm, all bends radius, vanes only in bends over 45\u00b0. Tie rods: SMACNA Table 5-4 (22 mm panel, A and B/C flange joints), applied to the width and the height separately. Tiger clips: at most 508 mm apart at 125-500 Pa, 254 mm at 750-1000 Pa. Splitter vanes: SMACNA Figure 4-4 by duct width.</p>
+    <div class="actions" style="margin-top:0"><button type="button" class="btn ghost" data-act="rl-reset">Reset to the starting values</button></div>
+  </div>`;
+}
+
+/* ---------- Checklist document ---------- */
+function curDocTl(){return taglists.find(t=>t.id===docId)||null}
+function downloadFile(name,mime,content){
+  try{
+    const b=new Blob([content],{type:mime}),u=URL.createObjectURL(b),a=document.createElement('a');
+    a.href=u;a.download=name;a.style.display='none';document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},0);
+    return true;
+  }catch(e){return false}
+}
+/* Inside the Claude viewer a file reaches the person only through the downloads
+   capability, which asks them to confirm. A plain browser gets the link instead. */
+async function saveOut(filename,data){
+  let cap=null;
+  try{if(window.claude&&window.claude.use) cap=await window.claude.use('downloads')}catch(e){}
+  if(cap){
+    try{
+      const r=await cap.save({filename,data});
+      return (r&&r.status==='delivered')?'Sent '+filename+' on.':'Saved '+filename+'.';
+    }catch(e){
+      const c=e&&e.code;
+      if(c==='declined') return 'Download cancelled.';
+      if(c==='rate_limited') return 'A download is already waiting for an answer. Try again in a moment.';
+      if(c==='too_large') return 'That file is too big to save here.';
+      return 'The download could not be saved'+(c?' ('+c+')':'')+'.';
+    }
+  }
+  const ext=(filename.split('.').pop()||'').toLowerCase();
+  const mime={pdf:'application/pdf',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    csv:'text/csv;charset=utf-8',html:'text/html;charset=utf-8'}[ext]||'application/octet-stream';
+  return downloadFile(filename,mime,data)?'Saved '+filename+' to your downloads.':'This browser blocked the download.';
+}
+async function sheetDownload(base,aoa){
+  let name='',data=null,note='';
+  if(window.XLSX){
+    try{
+      const ws=XLSX.utils.aoa_to_sheet(aoa),wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb,ws,'Sheet1');
+      data=XLSX.write(wb,{bookType:'xlsx',type:'array'});name=base+'.xlsx';
+    }catch(e){data=null}
+  }
+  if(!data){name=base+'.csv';data=aoaCsv(aoa);note=' Excel was not available, so this is a CSV. It opens in Excel.'}
+  return (await saveOut(name,data))+note;
+}
+/* A standalone page to open and print, for anywhere window.print() is blocked. */
+function docHtml(t,pr,m){
+  const css='body{font:11px -apple-system,Segoe UI,Arial,sans-serif;color:#15212B;margin:14px}'
+    +'h1{font:700 17px Arial Narrow,Arial,sans-serif;letter-spacing:.5px;margin:0}'
+    +'.co{color:#5B6B78;margin:2px 0 10px}'
+    +'.m{display:grid;grid-template-columns:1fr 1fr;gap:2px 18px;margin-bottom:10px}'
+    +'.m div{display:flex;gap:8px;border-bottom:1px solid #D3DAE0;padding:3px 0}'
+    +'.m b{color:#5B6B78;min-width:7.5em}'
+    +'table{border-collapse:collapse;width:100%;font-size:7pt}'
+    +'th,td{border:1px solid #999;padding:2px 4px;white-space:nowrap;text-align:left}'
+    +'thead th{background:#eee;text-align:center;font-size:6.5pt}'
+    +'td.c{text-align:center;font-weight:700}td.pass{color:#17794B}td.fail{color:#B42318}'
+    +'td.na{color:#5B6B78;font-weight:400;font-size:6pt}td.rem{white-space:normal;min-width:120px}'
+    +'td.st{text-align:center;font-weight:700}td.st.A{color:#17794B}td.st.RWK{color:#94600A}td.st.R{color:#B42318}'
+    +'.sig{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}'
+    +'.sig div{border-top:1px solid #D3DAE0;padding-top:6px}'
+    +'.ln{display:inline-block;min-width:150px;border-bottom:1px dotted #5B6B78;margin-left:6px}'
+    +'.lg{margin-top:12px;font-size:7.5pt;color:#5B6B78}.lg td{border:0;padding:1px 10px 1px 0;white-space:normal}'
+    +'@page{size:A4 landscape;margin:8mm}';
+  return '<!doctype html><html><head><meta charset="utf-8"><title>'+esc(t.name)+' final checklist</title><style>'+css+'</style></head><body>'
+    +'<h1>QC CHECKLIST &mdash; FINAL INSPECTION</h1><p class="co">'+(esc(m.company)||'')+'</p>'
+    +'<div class="m"><div><b>Project</b><span>'+(esc(m.project)||'&mdash;')+'</span></div>'
+    +'<div><b>Taglist</b><span>'+esc(t.name)+'</span></div>'
+    +'<div><b>Document ref</b><span>'+(esc(m.docref)||'&mdash;')+'</span></div>'
+    +'<div><b>Generated</b><span>'+esc(m.when)+'</span></div>'
+    +'<div><b>Pieces</b><span>'+pr.covered+' of '+pr.pieces+' inspected</span></div>'
+    +'<div><b>Result</b><span>Approved '+pr.counts.A+', reworked '+pr.counts.RWK+', rejected '+pr.counts.R+'</span></div>'
+    +'<div><b>Passed area</b><span>'+m2(pr.passedArea)+' m&sup2;</span></div>'
+    +'<div><b>Lined area passed</b><span>'+m2(pr.linerArea)+' m&sup2;</span></div></div>'
+    +docTable(pr).replace('<div class="tablewrap">','').replace(/<\/div>$/,'').replace('class="doct"','')
+    +'<div class="sig"><div>Checked by: '+(esc(m.inspector)||'<span class="ln"></span>')+'<br><br>Date: <span class="ln"></span><br><br>Signature: <span class="ln"></span></div>'
+    +'<div>Cross checked by: '+(esc(m.cross)||'<span class="ln"></span>')+'<br><br>Date: <span class="ln"></span><br><br>Signature: <span class="ln"></span></div></div>'
+    +'<div class="lg"><p>&#10003; accepted &nbsp; &#10007; defect found &nbsp; N/A not applicable &nbsp; blank not inspected &nbsp;&nbsp; A approved, R rejected, RWK reworked and re-inspected. Each group was confirmed by the inspector; a group tick covers every item in it.</p><table><tbody>'
+    +FINAL_GROUPS.map(g=>'<tr><td><strong>'+esc(g[0])+'</strong></td><td>'+g[1].map(it=>esc(it.h)+' &mdash; '+esc(it.label)+' ('+it.code+')').join('; ')+'</td></tr>').join('')
+    +'</tbody></table><p><strong>Conditional items:</strong> '+esc(rulesText(m.rules))+'</p></div></body></html>';
+}
+function docMeta(t){
+  return {company:settings.company,project:t.project||'',docref:settings.docref,
+    inspector:inspector,cross:settings.cross,when:new Date().toLocaleString(),rules:Object.assign({},rules)};
+}
+function renderDocMetaOnly(){
+  const set=(id,v)=>{const el=$(id);if(el) el.textContent=v||'—'};
+  set('#dm-company',settings.company);set('#dm-docref',settings.docref);set('#dm-cross',settings.cross);
+  const t=curDocTl();if(t) set('#dm-project',t.project);
+}
+function docTable(pr){
+  const g1=FINAL_GROUPS.map(g=>`<th colspan="${g[1].length}">${esc(g[0])}</th>`).join('');
+  const g2=FINAL.map(it=>`<th>${esc(it.h)}</th>`).join('');
+  const body=pr.rows.map(r=>`<tr><td>${r.sl}</td><td>${esc(r.tag)}</td><td>${esc(r.e.desc)}</td>${
+    FINAL.map(it=>{const v=r.crit[it.id];return `<td class="c ${v}">${v?TICK[v]:''}</td>`}).join('')
+  }<td class="rem">${esc(r.notes.join('; '))}</td><td class="st ${r.status}">${r.status}</td></tr>`).join('');
+  return `<div class="tablewrap"><table class="doct"><thead>
+    <tr><th rowspan="2">SL</th><th rowspan="2">Tag ID</th><th rowspan="2">Description</th>${g1}<th rowspan="2">Remarks</th><th rowspan="2">A/R/RWK</th></tr>
+    <tr>${g2}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+const JSPDF_URL='vendor/jspdf.min.js';
+const AUTOTABLE_URL='vendor/jspdf-autotable.min.js';
+/* The standard PDF fonts have no tick glyph, so the marks are drawn as lines. */
+async function pdfDownload(t,pr,m,base){
+  try{
+    await loadScript(JSPDF_URL);
+    await loadScript(AUTOTABLE_URL);
+  }catch(e){return 'The PDF builder could not load. Connect to the internet once, or download the Excel file.'}
+  const JS=window.jspdf&&window.jspdf.jsPDF;
+  if(!JS) return 'The PDF builder did not start. Download the Excel file instead.';
+  const doc=new JS({orientation:'landscape',unit:'mm',format:'a4'});
+  const W=doc.internal.pageSize.getWidth(),L=8;
+  doc.setFont('helvetica','bold');doc.setFontSize(13);
+  doc.text('QC CHECKLIST — FINAL INSPECTION',L,12);
+  doc.setFont('helvetica','normal');doc.setFontSize(8);
+  if(m.company) doc.text(String(m.company),L,17);
+  const pairs=[['Project',m.project||'-'],['Taglist',t.name||'-'],['Document ref',m.docref||'-'],
+    ['Generated',m.when],['Pieces',pr.covered+' of '+pr.pieces+' inspected'],
+    ['Result','Approved '+pr.counts.A+', reworked '+pr.counts.RWK+', rejected '+pr.counts.R],
+    ['Passed area',m2(pr.passedArea)+' m2'],['Lined area passed',m2(pr.linerArea)+' m2']];
+  let y=22;
+  pairs.forEach((pr2,i)=>{
+    const x=L+(i%2)*((W-2*L)/2);
+    if(i%2===0&&i) y+=4.4;
+    doc.setFont('helvetica','bold');doc.text(pr2[0],x,y);
+    doc.setFont('helvetica','normal');doc.text(String(pr2[1]),x+26,y);
+  });
+  const h1=[{content:'SL',rowSpan:2},{content:'Tag ID',rowSpan:2},{content:'Description',rowSpan:2}];
+  FINAL_GROUPS.forEach(g=>h1.push({content:g[0],colSpan:g[1].length}));
+  h1.push({content:'Remarks',rowSpan:2},{content:'A/R/RWK',rowSpan:2});
+  const marks=[];
+  const body=pr.rows.map(r=>{
+    const cells=[r.sl,r.tag,r.e.desc],mk={};
+    FINAL.forEach((it,ci)=>{
+      const v=r.crit[it.id];
+      mk[3+ci]=v;
+      cells.push(v==='na'?'-':'');
+    });
+    marks.push(mk);
+    cells.push(r.notes.join('; '),r.status);
+    return cells;
+  });
+  const colStyles={0:{cellWidth:7},1:{cellWidth:20},2:{cellWidth:24},
+    [3+FINAL.length]:{cellWidth:28},[4+FINAL.length]:{cellWidth:12}};
+  FINAL.forEach((it,i)=>{colStyles[3+i]={cellWidth:(W-2*L-91)/FINAL.length,halign:'center'}});
+  doc.autoTable({
+    head:[h1,FINAL.map(it=>it.a||it.h)],body,startY:y+5,margin:{left:L,right:L,top:12,bottom:14},
+    theme:'grid',styles:{fontSize:4.8,cellPadding:0.7,lineWidth:0.1,lineColor:[150,150,150],overflow:'linebreak'},
+    headStyles:{fillColor:[235,238,240],textColor:[20,30,40],fontSize:4.6,halign:'center',valign:'middle',lineWidth:0.1},
+    bodyStyles:{textColor:[20,30,40]},columnStyles:colStyles,
+    didDrawCell:d=>{
+      if(d.section!=='body') return;
+      const v=marks[d.row.index]&&marks[d.row.index][d.column.index];
+      if(v!=='pass'&&v!=='fail') return;
+      const x=d.cell.x+d.cell.width/2,c=d.cell.y+d.cell.height/2;
+      doc.setLineWidth(0.3);
+      if(v==='pass'){doc.setDrawColor(23,121,75);doc.line(x-1.1,c,x-0.3,c+0.9);doc.line(x-0.3,c+0.9,x+1.1,c-1)}
+      else{doc.setDrawColor(180,35,24);doc.line(x-0.9,c-0.9,x+0.9,c+0.9);doc.line(x-0.9,c+0.9,x+0.9,c-0.9)}
+    }
+  });
+  let fy=doc.lastAutoTable.finalY+8;
+  if(fy>doc.internal.pageSize.getHeight()-30){doc.addPage();fy=16}
+  doc.setFontSize(8);
+  const col2=L+(W-2*L)/2;
+  doc.text('Checked by: '+(m.inspector||'________________'),L,fy);
+  doc.text('Cross checked by: '+(m.cross||'________________'),col2,fy);
+  doc.text('Date: ________________',L,fy+7);doc.text('Date: ________________',col2,fy+7);
+  doc.text('Signature: ________________',L,fy+14);doc.text('Signature: ________________',col2,fy+14);
+  doc.addPage();
+  doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Inspection criteria',L,14);
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);
+  doc.text('Tick = accepted.  Cross = defect found.  -  = not applicable to this piece.  Blank = not inspected.',L,20);
+  doc.text('A = approved,  R = rejected,  RWK = reworked and re-inspected.  Each group was confirmed by the inspector; a group tick covers every item in it.',L,24.5);
+  let ly=32;
+  FINAL_GROUPS.forEach(g=>{
+    doc.setFont('helvetica','bold');doc.text(g[0],L,ly);
+    doc.setFont('helvetica','normal');
+    g[1].forEach(it=>{doc.text((it.a||it.h)+'  —  '+it.label+'   (code '+it.code+')',L+26,ly);ly+=4.4});
+    ly+=1.6;
+  });
+  ly+=3;
+  doc.setFont('helvetica','bold');doc.text('Conditional items',L,ly);ly+=4.4;
+  doc.setFont('helvetica','normal');
+  doc.splitTextToSize(rulesText(m.rules).replace(/°/g,' deg'),W-2*L).forEach(line=>{doc.text(line,L,ly);ly+=4.2});
+  return saveOut(base+'.pdf',doc.output('arraybuffer'));
+}
+function renderDoc(){
+  const t=curDocTl();
+  if(!t){view='taglist';renderTaglist();return}
+  const pr=taglistProgress(t,records),m=docMeta(t);
+  main.innerHTML=`
+  <div class="actions noprint" style="margin-top:16px">
+    <button type="button" class="btn ghost" data-act="doc-back">Back</button>
+    <button type="button" class="btn primary" data-act="doc-pdf">Download PDF</button>
+    <button type="button" class="btn" data-act="doc-xlsx">Download Excel</button>
+    <button type="button" class="btn ghost" data-act="doc-html">Download web page</button>
+  </div>
+  <p class="hint noprint" id="dl-msg" role="status" style="margin-top:8px">${pr.complete?'Every piece on this taglist has been inspected.':'Not every piece has been inspected yet. Rows with no tick were not reached.'}</p>
+  <div class="card form noprint" style="margin-top:12px">
+    <div class="field"><label for="doc-project">Project name</label><input id="doc-project" value="${esc(t.project||'')}" placeholder="Shown on the checklist"></div>
+    <div class="field"><label for="set-company">Company name</label><input id="set-company" value="${esc(settings.company)}" placeholder="Shown under the title"></div>
+    <div class="field"><label for="set-docref">Document reference</label><input id="set-docref" value="${esc(settings.docref)}" placeholder="e.g. KIS/Q11d/11/2026 Rev.0"></div>
+    <div class="field"><label for="set-cross">Cross checked by</label><input id="set-cross" value="${esc(settings.cross)}" placeholder="Name"></div>
+    <p class="hint">These are printed on the checklist and remembered on this device.</p>
+  </div>
+  <section class="doc" id="doc">
+    <h1>QC CHECKLIST &mdash; FINAL INSPECTION</h1>
+    <p class="co" id="dm-company">${esc(settings.company)||'—'}</p>
+    <div class="dmeta">
+      <div><b>Project</b><span id="dm-project">${esc(t.project)||'—'}</span></div>
+      <div><b>Taglist</b><span>${esc(t.name)}</span></div>
+      <div><b>Document ref</b><span id="dm-docref">${esc(settings.docref)||'—'}</span></div>
+      <div><b>Generated</b><span>${esc(m.when)}</span></div>
+      <div><b>Pieces</b><span>${pr.covered} of ${pr.pieces} inspected</span></div>
+      <div><b>Result</b><span>Approved ${pr.counts.A}, reworked ${pr.counts.RWK}, rejected ${pr.counts.R}</span></div>
+      <div><b>Passed area</b><span>${m2(pr.passedArea)} m²</span></div>
+      <div><b>Lined area passed</b><span>${m2(pr.linerArea)} m²</span></div>
+    </div>
+    ${docTable(pr)}
+    <div class="sig">
+      <div>Checked by: ${esc(inspector)||'<span class="ln"></span>'}<br><br>Date: <span class="ln"></span><br><br>Signature: <span class="ln"></span></div>
+      <div>Cross checked by: <span id="dm-cross">${esc(settings.cross)||'—'}</span><br><br>Date: <span class="ln"></span><br><br>Signature: <span class="ln"></span></div>
+    </div>
+    <div class="dleg">
+      <p>&#10003; accepted &nbsp; &#10007; defect found &nbsp; N/A not applicable to this piece &nbsp; blank not inspected &nbsp;&nbsp; A approved, R rejected, RWK reworked and re-inspected. Each group was confirmed by the inspector; a group tick covers every item in it.</p>
+      <table><tbody>${FINAL_GROUPS.map(g=>`<tr><td><strong>${esc(g[0])}</strong></td><td>${g[1].map(it=>esc(it.h)+' &mdash; '+esc(it.label)+' ('+it.code+')').join('; ')}</td></tr>`).join('')}</tbody></table>
+      <p style="margin-top:8px"><strong>Conditional items:</strong> ${esc(rulesText(m.rules))}</p>
+    </div>
+  </section>`;
+}
+
+/* ---------- Events ---------- */
+document.addEventListener('click',async e=>{
+  const tab=e.target.closest('[data-view]');
+  if(tab){view=tab.dataset.view;render();return}
+  const b=e.target.closest('[data-act]');if(!b) return;
+  const act=b.dataset.act;
+  if(act==='pass'||act==='fail'||act==='na'){
+    const row=b.closest('[data-id]');if(!row||!run) return;
+    const it=FINAL.find(x=>x.id===row.dataset.id);if(!it) return;
+    const a=run.answers[it.id]||(run.answers[it.id]={});a.r=act;delete a.auto;
+    refreshGroup(it.g);
+    if(act==='fail'){const ta=$('#nt-'+it.id);if(ta) ta.focus()}
+  }
+  else if(act==='gok'){
+    if(!run) return;const g=b.dataset.g;
+    run.answers=groupOk(g,run.app,run.answers);run.open[g]=false;refreshGroup(g);
+  }
+  else if(act==='gdef'){
+    if(!run) return;const g=b.dataset.g;
+    /* open the group item by item; what the inspector does not mark failed passes with the group */
+    run.open[g]=true;run.answers=groupOk(g,run.app,run.answers);refreshGroup(g);
+  }
+  else if(act==='pick'||act==='pick-rest'){
+    if(!run) return;
+    if(act==='pick'){
+      const u=b.dataset.u,i=run.sel.indexOf(u);
+      if(i>=0) run.sel.splice(i,1);else run.sel.push(u);
+    }else{
+      const d=doneUnits(run.units);
+      run.sel=run.units.filter(u=>!d[u.uid]).map(u=>u.uid);
+    }
+    const order=run.units.map(u=>u.uid);run.sel.sort((x,y)=>order.indexOf(x)-order.indexOf(y));
+    const box=$('#pcbox');if(box) box.innerHTML=piecesHTML();
+    refreshBar();
+  }
+  else if(act==='cancel'){
+    if(b.dataset.armed){run=null;mode='scan';render();return}
+    b.dataset.armed='1';b.textContent='Tap again to discard';
+    setTimeout(()=>{delete b.dataset.armed;b.textContent='Discard'},4000);
+  }
+  else if(act==='submit'){b.disabled=true;await submitRun()}
+  else if(act==='retry'){
+    b.disabled=true;
+    try{await saveRecord(lastRec);saveErr=null;if(lastBatch.indexOf(lastRec)<0) lastBatch.push(lastRec)}
+    catch(err){saveErr=(err&&err.message)||'The record could not be saved.'}
+    renderDone();
+  }
+  else if(act==='nextpiece'){startRun(lastCode)}
+  else if(act==='next'){mode='scan';render()}
+  else if(act==='cam'){await openCamera()}
+  else if(act==='cam-stop'){closeCamera();camMsg('Camera closed.')}
+  else if(act==='cards'){
+    const msg=$('#cards-msg');msg.textContent='Preparing the file…';b.disabled=true;
+    try{msg.textContent=await commandCardsPdf()}catch(err){msg.textContent='The cards could not be built.'}
+    b.disabled=false;
+  }
+  else if(act==='doc'){docId=b.dataset.tl;view='doc';render()}
+  else if(act==='doc-back'){view='taglist';render()}
+  else if(act==='doc-pdf'||act==='doc-xlsx'||act==='doc-html'){
+    const t=curDocTl();if(!t) return;
+    const pr=taglistProgress(t,records),m=docMeta(t),base=safeName(t.name)+'-final-checklist';
+    const msg=$('#dl-msg');msg.textContent='Preparing the file…';b.disabled=true;
+    try{
+      msg.textContent=act==='doc-pdf' ? await pdfDownload(t,pr,m,base)
+        : act==='doc-xlsx' ? await sheetDownload(base,checklistAoa(t,pr,m))
+        : (await saveOut(base+'.html',docHtml(t,pr,m)))+' Open it in a browser to read or print.';
+    }catch(e){msg.textContent='That file could not be built'+(e&&e.message?' ('+e.message+')':'')+'.'}
+    b.disabled=false;
+  }
+  else if(act==='hour-dl'){
+    const h=hourlyCtx(),msg=$('#dl-msg');
+    msg.textContent='Preparing the file…';b.disabled=true;
+    msg.textContent=await sheetDownload('hourly-defects-'+h.date+'-'+h.shift.toLowerCase(),hourlyAoa(h.date,h.shift,inspector,h.b))
+      +(h.s.real?'':' These are the example records, not real ones.');
+    b.disabled=false;
+  }
+  else if(act==='allcsv'){
+    const msg=$('#dl-msg');msg.textContent='Preparing the file…';b.disabled=true;
+    let list=records;
+    if(store.mode==='idb'){try{list=(await dbAll('records'))||records}catch(err){list=records}}
+    list=list.slice().sort((x,y)=>x.ts-y.ts);
+    msg.textContent=list.length?await saveOut('line-check-records-'+dateKey(new Date())+'.csv',recordsCsv(list))+' '+list.length+' records.':'No records yet.';
+    b.disabled=false;
+  }
+  else if(act==='tl-cancel'){imp=null;tlMsg=null;renderTaglist()}
+  else if(act==='rl-reset'){rules=Object.assign({},RULE_DEFAULTS);lsSet('lc5-rules',JSON.stringify(rules));renderTaglist()}
+  else if(act==='tl-import'){
+    if(!imp) return;
+    const ent=makeEntries(imp.data,imp.map);
+    if(!ent.rows.length) return;
+    const groups=splitByTaglist(ent.rows,((imp.name||imp.fileName)||'').trim()||imp.fileName);
+    const now=Date.now(),changed=[],replaced=[];
+    groups.forEach((g,i)=>{
+      const old=taglists.find(t=>t.name===g.name);
+      const t={id:old?old.id:'T'+now.toString(36)+i,name:g.name,at:now,rows:g.rows,areaCol:imp.headers[imp.map.area]||'',
+        pieces:g.pieces,project:(imp.project||'').trim()||(old?old.project:'')};
+      if(old){taglists=taglists.filter(x=>x.id!==old.id);replaced.push(g.name)}
+      taglists.unshift(t);changed.push(t);
+    });
+    reindex();
+    if(await putTaglists(changed)) tlMsg={t:'ok',m:'Loaded '+groups.length+(groups.length===1?' taglist':' taglists')+', '+ent.pieces+' pieces.'+(replaced.length?' Replaced: '+replaced.join(', ')+'.':'')+(ent.noArea?' '+ent.noArea+' rows have no area.':'')};
+    else tlMsg={t:'bad',m:'Not saved on this device: no room for that file. It is loaded until the app is closed.'};
+    imp=null;renderTaglist();
+  }
+  else if(act==='tl-remove'){
+    if(b.dataset.armed){const id=b.dataset.tl;taglists=taglists.filter(t=>t.id!==id);reindex();await dropTaglist(id);tlMsg=null;renderTaglist();return}
+    b.dataset.armed='1';b.textContent='Tap again to remove';
+    setTimeout(()=>{delete b.dataset.armed;b.textContent='Remove'},4000);
+  }
+  else if(act==='copycsv'){
+    csvText=recordsCsv(source().list);
+    try{await navigator.clipboard.writeText(csvText);b.textContent='Copied'}catch(err){b.textContent='Select and copy below'}
+    const ex=$('#csv-out');
+    if(ex) ex.value=csvText;else main.insertAdjacentHTML('beforeend',`<textarea class="csv" id="csv-out" readonly aria-label="Records as CSV">${esc(csvText)}</textarea>`);
+    $('#csv-out').select();
+  }
+  else if(act==='copyhour'){
+    const h=hourlyCtx(),txt=hourReport(h.date,h.shift,h.stageLabel,h.b);
+    try{await navigator.clipboard.writeText(txt);b.textContent='Copied'}catch(err){b.textContent='Select and copy below'}
+    const ex=$('#hr-out');
+    if(ex) ex.value=txt;else main.insertAdjacentHTML('beforeend',`<textarea class="csv" id="hr-out" readonly aria-label="Hourly report">${esc(txt)}</textarea>`);
+    $('#hr-out').select();
+  }
+});
+main.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='f-inspector'){inspector=t.value;return}
+  if(t.id==='tl-name'&&imp){imp.name=t.value;return}
+  if(t.id==='tl-project'&&imp){imp.project=t.value;return}
+  if(t.id&&t.id.indexOf('rl-')===0&&t.id!=='rl-bend'&&t.id!=='rl-press'){
+    const k=t.id.slice(3),v=parseArea(t.value);
+    if(v==null||v<0) return;
+    rules[k]=v;
+    lsSet('lc5-rules',JSON.stringify(rules));return;
+  }
+  if(t.id==='doc-project'){const x=curDocTl();if(x){x.project=t.value;putTaglists([x]);renderDocMetaOnly()}return}
+  if(t.id&&t.id.indexOf('set-')===0){settings[t.id.slice(4)]=t.value;lsSet('lc4-settings',JSON.stringify(settings));if(view==='doc') renderDocMetaOnly();return}
+  if(t.id==='tl-try'){
+    const h=lookupKey(tlIndex,t.value),out=$('#tl-try-out');
+    if(!t.value.trim()){out.textContent='Shows what the number matches, so you can check the columns before the shift.';return}
+    if(!h){out.textContent='No match.';return}
+    const en=h.entry,a=asmIndex[en.k],l=endInfo(en.ls),s=endInfo(en.ss),ln=linerOf(en);
+    out.textContent=[en.tag,en.tl,en.desc,en.q>1?en.q+' pieces':'',en.pp!=null?en.pp.toFixed(2)+' m² each':'no area',
+      l?'LS '+l.t:'',s?'SS '+s.t:'',ln===true?'lined':ln===false?'no liner':'',isAps(en)?'APS':'',a?'joined with '+a.members.filter(m=>m.k!==en.k).map(m=>m.tag).join(', '):'']
+      .filter(Boolean).join(' · ')+(h.n>1?' (appears '+h.n+' times)':'');
+    return;
+  }
+  if(!run||!t.matches('[data-note]')) return;
+  const row=t.closest('[data-id]');
+  (run.answers[row.dataset.id]||(run.answers[row.dataset.id]={})).note=t.value;
+});
+main.addEventListener('change',async e=>{
+  const t=e.target;
+  if(t.id==='h-date'){
+    hsel.date=t.value||null;hourlyExtra=null;
+    if(hsel.date&&store.mode==='idb'&&slotStart(hsel.date,'Day',0)<loadedFrom){
+      const a=slotStart(hsel.date,'Day',0),z=a+864e5;
+      try{hourlyExtra={date:hsel.date,list:(await dbRange(a,z))||[]}}catch(err){hourlyExtra=null}
+    }
+    renderHourly();
+  }
+  else if(t.id==='h-shift'){hsel.shift=t.value;renderHourly()}
+  else if(t.id==='l-failed'){logFailedOnly=t.checked;renderLog()}
+  else if(t.id==='rl-press'){if(t.value==='pos'){rules.posOnly=true;rules.pressure=1000}else{rules.posOnly=false;rules.pressure=parseInt(t.value,10)||500}lsSet('lc5-rules',JSON.stringify(rules))}
+  else if(t.id==='tl-file'&&t.files&&t.files[0]){
+    const f=t.files[0];tlMsg=null;
+    try{
+      let rows;
+      if(/\.xlsx?$/i.test(f.name)){
+        if(!window.XLSX) throw new Error('Excel files cannot be read right now because the reader did not load. Save the sheet as CSV and upload that.');
+        const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
+        rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,defval:''});
+      }else rows=parseCsv(await f.text());
+      rows=rows.filter(r=>r.some(x=>String(x).trim()!==''));
+      if(rows.length<2) throw new Error('The file has no data rows.');
+      imp={fileName:f.name,name:f.name.replace(/\.[^.]+$/,''),project:'',all:rows,hdr:1};
+      recomputeImp();
+    }catch(err){imp=null;tlMsg={t:'bad',m:(err&&err.message)||'Could not read that file.'}}
+    t.value='';renderTaglist();
+  }
+  else if(t.id==='tl-hdr'&&imp){
+    const n=parseInt(t.value,10);
+    imp.hdr=Math.max(1,Math.min(Math.min(20,imp.all.length-1),isNaN(n)?1:n));
+    recomputeImp();renderTaglist();
+  }
+  else if(t.id&&t.id.indexOf('tl-map-')===0&&imp){
+    imp.map[t.id.slice(7)]=parseInt(t.value,10);renderTaglist();
+  }
+});
+main.addEventListener('submit',e=>{
+  e.preventDefault();
+  if(e.target.id==='scanform') startRun($('#f-code').value);
+});
+
+boot();
+</script>
+
+<script>
+/* Installable, and everything it needs is cached, so it keeps working with no signal. */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})});
+}
+let deferredInstall=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredInstall=e;
+  const b=document.getElementById('installbtn');
+  if(b){b.hidden=false;b.onclick=async()=>{b.hidden=true;deferredInstall.prompt();deferredInstall=null}}
+});
+window.addEventListener('appinstalled',()=>{const b=document.getElementById('installbtn');if(b) b.hidden=true});
+</script>
+</body>
+</html>
